@@ -17,6 +17,14 @@ Reasons
 
 The backend uses Quarkus and follows Jakarta EE standards where possible.
 
+## Jakarta First
+
+The backend is implemented using Quarkus.
+
+Application code follows Jakarta EE standards whenever possible.
+
+Quarkus-specific features are used only when they provide clear benefits without introducing unnecessary coupling.
+
 ## API First
 
 The CLI, frontend and future admin panel communicate with the backend through APIs.

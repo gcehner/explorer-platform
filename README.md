@@ -14,7 +14,7 @@ The project is built around:
 ## Applications
 
 ```text
-backend/   Spring Boot API
+backend/   Quarkus REST API
 frontend/  Next.js web application
 cli/       Java command-line tool
 docs/      project documentation

@@ -1,5 +1,22 @@
 # Architecture Decisions
 
+## Technology Stack
+
+The backend is implemented using Quarkus.
+
+Reasons
+
+- Familiar Jakarta EE programming model
+- CDI
+- Jakarta REST
+- Hibernate ORM
+- Excellent Java 21 support
+- Lightweight runtime
+
+## Backend Framework
+
+The backend uses Quarkus and follows Jakarta EE standards where possible.
+
 ## API First
 
 The CLI, frontend and future admin panel communicate with the backend through APIs.

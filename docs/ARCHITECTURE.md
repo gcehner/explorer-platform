@@ -5,9 +5,9 @@ Explorer Platform consists of three applications.
 ```text
 CLI
  │
- │ REST API
+ │ REST
  ▼
-Backend
+Quarkus Backend
  │
  ├── PostgreSQL
  ├── File Storage
@@ -19,18 +19,18 @@ Frontend
 
 ## Backend
 
-Spring Boot is the central application.
+The backend is implemented using Quarkus.
 
 It owns:
 
-* domain model
-* business logic
-* database access
-* GPX processing
-* statistics calculation
-* elevation profile generation
-* public API
-* future admin API
+- domain model
+- business logic
+- database access
+- GPX processing
+- statistics calculation
+- elevation profile generation
+- public API
+- future management API
 
 The backend is the single source of truth.
 

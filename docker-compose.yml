@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:17
+
+    container_name: explorer-postgres
+
+    environment:
+      POSTGRES_DB: explorer
+      POSTGRES_USER: explorer
+      POSTGRES_PASSWORD: explorer
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - explorer-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  explorer-postgres-data:

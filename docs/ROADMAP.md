@@ -2,7 +2,7 @@
 
 ## Milestone 1 — Foundation
 
-* [ ] Create Spring Boot backend
+* [ ] Create Quarkus backend
 * [ ] Create Next.js frontend
 * [ ] Create Java CLI
 * [ ] Configure PostgreSQL

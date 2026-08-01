@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="sl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Explorer — Home Mock</title>
+  <style>
+    :root {
+      --bg: #f4f5f2;
+      --surface: #ffffff;
+      --surface-soft: #eef1ea;
+      --text: #17201a;
+      --muted: #687168;
+      --border: #dfe4dc;
+      --accent: #4d7e20;
+      --accent-dark: #315714;
+      --ski: #2f78bd;
+      --header: #101513;
+      --shadow: 0 12px 30px rgba(20, 30, 23, .08);
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background: var(--bg);
+      font: 15px/1.55 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    button, input { font: inherit; }
+
+    .topbar {
+      height: 74px;
+      display: flex;
+      align-items: center;
+      gap: 36px;
+      padding: 0 3.5vw;
+      background: var(--header);
+      color: white;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+
+    .brand {
+      min-width: 280px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-mark {
+      width: 50px;
+      height: 36px;
+      position: relative;
+      border-bottom: 3px solid #77a947;
+    }
+
+    .brand-mark::before,
+    .brand-mark::after {
+      content: "";
+      position: absolute;
+      bottom: 2px;
+      width: 0;
+      height: 0;
+      border-left: 18px solid transparent;
+      border-right: 18px solid transparent;
+      border-bottom: 28px solid white;
+    }
+
+    .brand-mark::before { left: 0; }
+    .brand-mark::after {
+      left: 16px;
+      transform: scale(.76);
+      transform-origin: bottom;
+      opacity: .76;
+    }
+
+    .brand strong {
+      display: block;
+      font-size: 19px;
+      letter-spacing: .04em;
+    }
+
+    .brand small {
+      display: block;
+      color: #a4c779;
+      letter-spacing: .08em;
+      font-size: 11px;
+    }
+
+    nav {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 34px;
+    }
+
+    nav a {
+      color: #e7ebe7;
+      font-weight: 800;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    nav a:hover,
+    nav a.active { color: #8fbd53; }
+
+    .utility {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 23px;
+      color: #dfe5df;
+    }
+
+    .hero-layout {
+      display: grid;
+      grid-template-columns: 47% 53%;
+      min-height: 500px;
+      background: var(--surface);
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      color: white;
+      background:
+        linear-gradient(90deg, rgba(8,16,11,.86), rgba(8,16,11,.25)),
+        radial-gradient(circle at 72% 18%, rgba(255,255,255,.28), transparent 19%),
+        linear-gradient(155deg, #7b8b7e 0 17%, #2f4939 17% 33%, #8f9f8e 33% 47%, #23392e 47% 64%, #617365 64% 78%, #273d31 78%);
+    }
+
+    .hero::before,
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .hero::before {
+      background:
+        linear-gradient(164deg, transparent 0 55%, rgba(13,31,20,.57) 55% 63%, transparent 63%),
+        linear-gradient(191deg, transparent 0 67%, rgba(10,27,18,.62) 67% 75%, transparent 75%);
+      mix-blend-mode: multiply;
+    }
+
+    .hero::after {
+      width: 86px;
+      height: 150px;
+      left: 68%;
+      top: 49%;
+      inset: auto;
+      border-radius: 48% 48% 42% 42%;
+      background:
+        radial-gradient(circle at 50% 15%, #111 0 12px, transparent 13px),
+        linear-gradient(75deg, transparent 0 44%, #111 45% 52%, transparent 53%),
+        linear-gradient(105deg, transparent 0 44%, #111 45% 52%, transparent 53%),
+        linear-gradient(#18241c, #111);
+      transform: rotate(-12deg);
+      filter: drop-shadow(0 10px 14px rgba(0,0,0,.35));
+      opacity: .92;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 600px;
+      padding: 118px 44px 48px 5vw;
+    }
+
+    .eyebrow {
+      color: #8fbd53;
+      text-transform: uppercase;
+      font-weight: 900;
+      letter-spacing: .08em;
+    }
+
+    h1 {
+      margin: 16px 0 14px;
+      font-size: clamp(44px, 4.7vw, 68px);
+      line-height: 1.02;
+      letter-spacing: -.035em;
+    }
+
+    .hero-copy {
+      max-width: 520px;
+      font-size: 18px;
+      color: #eef1ee;
+    }
+
+    .primary {
+      margin-top: 22px;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      border: 0;
+      border-radius: 9px;
+      padding: 14px 20px;
+      background: var(--accent);
+      color: white;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .map-panel {
+      position: relative;
+      overflow: hidden;
+      background:
+        linear-gradient(rgba(245,249,241,.34), rgba(245,249,241,.34)),
+        repeating-linear-gradient(15deg, transparent 0 25px, rgba(100,132,89,.10) 26px 27px),
+        repeating-linear-gradient(98deg, transparent 0 42px, rgba(94,125,85,.08) 43px 44px),
+        #e8eee3;
+    }
+
+    .map-panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(145deg, transparent 0 20%, rgba(82,117,71,.12) 21% 28%, transparent 29% 100%),
+        linear-gradient(35deg, transparent 0 32%, rgba(72,104,65,.10) 33% 40%, transparent 41%);
+    }
+
+    .place {
+      position: absolute;
+      color: #273229;
+      font-size: 13px;
+      font-weight: 700;
+      opacity: .84;
+    }
+
+    .marker {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 5px 12px rgba(0,0,0,.16);
+      cursor: pointer;
+    }
+
+    .marker span { transform: rotate(45deg); font-size: 14px; }
+    .marker.ski { background: var(--ski); }
+    .marker.dark { background: #151b17; }
+
+    .map-controls {
+      position: absolute;
+      right: 22px;
+      top: 22px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .map-control {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      font-size: 20px;
+    }
+
+    .zoom {
+      position: absolute;
+      right: 22px;
+      bottom: 72px;
+      overflow: hidden;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .zoom button {
+      width: 42px;
+      height: 42px;
+      display: block;
+      border: 1px solid var(--border);
+      background: white;
+      font-size: 22px;
+      cursor: pointer;
+    }
+
+    .map-filterbar {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      min-height: 58px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      padding: 10px 22px;
+      background: rgba(255,255,255,.94);
+      border-top: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+    }
+
+    .check {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .check i {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      background: var(--accent);
+      display: grid;
+      place-items: center;
+      color: white;
+      font-style: normal;
+      font-size: 12px;
+    }
+
+    .check.ski i { background: var(--ski); }
+    .reset {
+      margin-left: auto;
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .content {
+      width: min(1450px, 94vw);
+      margin: 0 auto;
+      padding: 26px 0 46px;
+    }
+
+    .quick-strip {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0;
+      margin-bottom: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .quick-item {
+      min-height: 100px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 20px 28px;
+      border-right: 1px solid var(--border);
+    }
+
+    .quick-item:last-child { border-right: 0; }
+    .quick-icon { font-size: 34px; color: var(--accent); }
+    .quick-item strong { display: block; font-size: 24px; }
+    .quick-item small { color: var(--muted); text-transform: uppercase; font-weight: 800; letter-spacing: .04em; }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1.75fr .85fr;
+      gap: 20px;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 22px 24px 14px;
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      font-size: 21px;
+      letter-spacing: -.015em;
+    }
+
+    .panel-head a {
+      color: var(--accent-dark);
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    .tour-list { padding: 0 20px 20px; }
+
+    .tour {
+      display: grid;
+      grid-template-columns: 38% 1fr;
+      min-height: 174px;
+      margin-bottom: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      background: white;
+    }
+
+    .tour-image {
+      position: relative;
+      min-height: 174px;
+      background:
+        radial-gradient(circle at 72% 18%, rgba(255,255,255,.35), transparent 18%),
+        linear-gradient(160deg, #a1afa0 0 24%, #3e5846 24% 47%, #7c8f7f 47% 65%, #294234 65% 80%, #526a58 80%);
+    }
+
+    .tour:nth-child(2) .tour-image {
+      background:
+        radial-gradient(circle at 72% 18%, rgba(255,255,255,.62), transparent 18%),
+        linear-gradient(165deg, #eef3f4 0 32%, #9cadb0 32% 52%, #f8fbfb 52% 65%, #5d7580 65%);
+    }
+
+    .tour:nth-child(3) .tour-image {
+      background:
+        radial-gradient(circle at 72% 18%, rgba(255,255,255,.22), transparent 18%),
+        linear-gradient(160deg, #7a927d 0 24%, #203a2a 24% 48%, #426447 48% 67%, #152d21 67% 82%, #344d3a 82%);
+    }
+
+    .badge {
+      position: absolute;
+      left: 12px;
+      top: 12px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      color: white;
+      background: var(--accent);
+      font-weight: 900;
+      font-size: 12px;
+    }
+
+    .badge.ski { background: var(--ski); }
+
+    .tour-body {
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tour h3 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: -.02em;
+    }
+
+    .region {
+      margin-top: 2px;
+      color: var(--accent);
+      font-weight: 800;
+    }
+
+    .region.ski { color: var(--ski); }
+
+    .tour p {
+      margin: 10px 0 14px;
+      color: #3d473f;
+    }
+
+    .tour-meta {
+      margin-top: auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .tour-date { margin-left: auto; }
+
+    .side { padding: 10px 22px 22px; }
+    .side-section { padding: 18px 0; border-bottom: 1px solid var(--border); }
+    .side-section:last-child { border-bottom: 0; }
+    .side h2 { margin: 0 0 16px; font-size: 20px; }
+    .category-row,
+    .popular-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 40px;
+      font-weight: 800;
+    }
+
+    .category-row .count {
+      margin-left: auto;
+      min-width: 34px;
+      padding: 3px 9px;
+      text-align: center;
+      border-radius: 999px;
+      background: var(--accent);
+      color: white;
+      font-size: 12px;
+    }
+
+    .category-row.ski .count { background: var(--ski); }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      border-radius: 7px;
+      padding: 8px 11px;
+      background: #ecefea;
+      color: #3d473f;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .guide-callout {
+      margin-top: 18px;
+      padding: 18px;
+      background: #edf2e8;
+      border: 1px solid #d9e4cf;
+      border-radius: 11px;
+    }
+
+    .guide-callout h3 { margin: 0 0 6px; }
+    .guide-callout p { margin: 0 0 12px; color: var(--muted); }
+
+    footer {
+      min-height: 86px;
+      display: flex;
+      align-items: center;
+      gap: 30px;
+      padding: 24px 4vw;
+      background: var(--header);
+      color: #dfe4df;
+    }
+
+    footer .footer-links {
+      margin-left: auto;
+      display: flex;
+      gap: 28px;
+      font-size: 13px;
+    }
+
+    @media (max-width: 1050px) {
+      nav { gap: 17px; }
+      .hero-layout { grid-template-columns: 1fr; }
+      .hero { min-height: 480px; }
+      .map-panel { min-height: 480px; }
+      .main-grid { grid-template-columns: 1fr; }
+      .quick-strip { grid-template-columns: repeat(3, 1fr); }
+      .quick-item:nth-child(3) { border-right: 0; }
+      .quick-item:nth-child(-n+3) { border-bottom: 1px solid var(--border); }
+    }
+
+    @media (max-width: 760px) {
+      .topbar { height: auto; padding: 14px 18px; }
+      .brand { min-width: 0; }
+      nav { display: none; }
+      .hero-content { padding: 96px 24px 40px; }
+      .map-filterbar { flex-wrap: wrap; gap: 12px; }
+      .reset { margin-left: 0; }
+      .quick-strip { grid-template-columns: 1fr; }
+      .quick-item { border-right: 0; border-bottom: 1px solid var(--border); }
+      .quick-item:last-child { border-bottom: 0; }
+      .tour { grid-template-columns: 1fr; }
+      .tour-image { min-height: 220px; }
+      .tour-date { margin-left: 0; }
+      footer { align-items: flex-start; flex-direction: column; }
+      footer .footer-links { margin-left: 0; flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span>
+        <strong>EXPLORER</strong>
+        <small>MTB &amp; SKI ADVENTURES</small>
+      </span>
+    </a>
+
+    <nav aria-label="Glavna navigacija">
+      <a href="#">MTB</a>
+      <a href="#">TURNO SMUČANJE</a>
+      <a href="#">O MENI</a>
+      <a href="#" class="active">VODNIK</a>
+      <a href="#">KONTAKT</a>
+    </nav>
+
+    <div class="utility" aria-label="Orodja">
+      <span title="Iskanje">⌕</span>
+      <span title="Tema">☼</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero-layout" aria-label="Uvod">
+      <div class="hero">
+        <div class="hero-content">
+          <div class="eyebrow">Raziskuj. Načrtuj. Poveži.</div>
+          <h1>EPSKE TURE<br>PO GORAH</h1>
+          <p class="hero-copy">
+            Kurirana zbirka MTB in turno smučarskih tur z natančnimi sledmi,
+            višinskimi profili in tehničnimi informacijami.
+          </p>
+        </div>
+      </div>
+
+      <div class="map-panel" aria-label="Zemljevid objavljenih tur">
+        <span class="place" style="left:16%;top:22%">Bovec</span>
+        <span class="place" style="left:39%;top:18%">Triglavski narodni park</span>
+        <span class="place" style="left:64%;top:21%">Bled</span>
+        <span class="place" style="left:79%;top:43%">Kranj</span>
+        <span class="place" style="left:61%;top:61%;font-size:22px">Ljubljana</span>
+        <span class="place" style="left:28%;top:51%">Tolmin</span>
+        <span class="place" style="left:49%;top:69%">Idrija</span>
+        <span class="place" style="left:71%;top:75%">Vrhnika</span>
+
+        <button class="marker ski" style="left:23%;top:14%" aria-label="Turno smučarska tura"><span>✦</span></button>
+        <button class="marker dark" style="left:40%;top:15%" aria-label="Gorska tura"><span>▲</span></button>
+        <button class="marker" style="left:52%;top:29%" aria-label="MTB tura"><span>●</span></button>
+        <button class="marker ski" style="left:81%;top:17%" aria-label="Turno smučarska tura"><span>✦</span></button>
+        <button class="marker" style="left:16%;top:36%" aria-label="MTB tura"><span>●</span></button>
+        <button class="marker" style="left:37%;top:40%" aria-label="MTB tura"><span>●</span></button>
+        <button class="marker ski" style="left:50%;top:57%" aria-label="Turno smučarska tura"><span>✦</span></button>
+        <button class="marker dark" style="left:68%;top:27%" aria-label="Gorska tura"><span>▲</span></button>
+        <button class="marker" style="left:84%;top:37%" aria-label="MTB tura"><span>●</span></button>
+        <button class="marker ski" style="left:35%;top:72%" aria-label="Turno smučarska tura"><span>✦</span></button>
+
+        <div class="map-controls">
+          <div class="map-control" title="Celozaslonski pogled">⛶</div>
+        </div>
+
+        <div class="zoom" aria-label="Povečava zemljevida">
+          <button type="button">+</button>
+          <button type="button">−</button>
+        </div>
+
+        <div class="map-filterbar">
+          <span class="check"><i>✓</i> MTB</span>
+          <span class="check ski"><i>✓</i> TURNO SMUČANJE</span>
+          <span class="reset">↻ PONASTAVI FILTER</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="content">
+      <div class="quick-strip" aria-label="Hiter pregled zbirke">
+        <div class="quick-item">
+          <span class="quick-icon">△</span>
+          <span><strong>89</strong><small>Objavljenih tur</small></span>
+        </div>
+        <div class="quick-item">
+          <span class="quick-icon">⌁</span>
+          <span><strong>5.892 km</strong><small>Skupna razdalja</small></span>
+        </div>
+        <div class="quick-item">
+          <span class="quick-icon">↗</span>
+          <span><strong>186.500 m</strong><small>Skupaj vzpona</small></span>
+        </div>
+        <div class="quick-item">
+          <span class="quick-icon">◫</span>
+          <span><strong>6 let</strong><small>Aktivno</small></span>
+        </div>
+        <div class="quick-item">
+          <span class="quick-icon">◎</span>
+          <span><strong>7</strong><small>Držav</small></span>
+        </div>
+      </div>
+
+      <div class="main-grid">
+        <section class="panel">
+          <div class="panel-head">
+            <h2>NOVE TURE</h2>
+            <a href="#">VSE TURE →</a>
+          </div>
+
+          <div class="tour-list">
+            <article class="tour">
+              <div class="tour-image"><span class="badge">MTB</span></div>
+              <div class="tour-body">
+                <h3>Mangart – Via Italiana</h3>
+                <div class="region">Julijske Alpe · Italija</div>
+                <p>Visokogorska krožna tura z dolgim vzponom in tehnično zahtevnim spustom.</p>
+                <div class="tour-meta">
+                  <span>↗ 32 km</span>
+                  <span>△ 1.650 m</span>
+                  <span>◷ 5–6 h</span>
+                  <span>S4 · E3</span>
+                  <span class="tour-date">12. maj 2024</span>
+                </div>
+              </div>
+            </article>
+
+            <article class="tour">
+              <div class="tour-image"><span class="badge ski">TURNO SMUČANJE</span></div>
+              <div class="tour-body">
+                <h3>Vrtača – Tosc – Vrtača</h3>
+                <div class="region ski">Karavanke · Slovenija</div>
+                <p>Klasična turno smučarska tura z jasnim profilom, odprtim pobočjem in tehničnim zaključkom.</p>
+                <div class="tour-meta">
+                  <span>↗ 14 km</span>
+                  <span>△ 1.350 m</span>
+                  <span>◷ 4–5 h</span>
+                  <span>zahtevna</span>
+                  <span class="tour-date">3. april 2024</span>
+                </div>
+              </div>
+            </article>
+
+            <article class="tour">
+              <div class="tour-image"><span class="badge">MTB</span></div>
+              <div class="tour-body">
+                <h3>Krn – Čez Kriške pode</h3>
+                <div class="region">Julijske Alpe · Slovenija</div>
+                <p>Razgibana visokogorska tura z dolgimi odseki nošenja in razglednim tehničnim spustom.</p>
+                <div class="tour-meta">
+                  <span>↗ 48 km</span>
+                  <span>△ 1.900 m</span>
+                  <span>◷ 6–7 h</span>
+                  <span>S3 · E2</span>
+                  <span class="tour-date">28. april 2024</span>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <aside class="panel side">
+          <section class="side-section">
+            <h2>KATEGORIJE</h2>
+            <div class="category-row"><span>◉</span><span>MTB TURE</span><span class="count">58</span></div>
+            <div class="category-row ski"><span>✦</span><span>TURNO SMUČANJE</span><span class="count">31</span></div>
+          </section>
+
+          <section class="side-section">
+            <h2>PRILJUBLJENA OBMOČJA</h2>
+            <div class="chips">
+              <span class="chip">Julijske Alpe</span>
+              <span class="chip">Karavanke</span>
+              <span class="chip">Kamniško-Savinjske Alpe</span>
+              <span class="chip">Dolomiti</span>
+              <span class="chip">Stelvio National Park</span>
+            </div>
+          </section>
+
+          <section class="side-section">
+            <h2>RAZISKUJ</h2>
+            <div class="popular-row"><span>↗</span><span>Največ vzpona</span><span style="margin-left:auto">→</span></div>
+            <div class="popular-row"><span>⌁</span><span>Najdaljše ture</span><span style="margin-left:auto">→</span></div>
+            <div class="popular-row"><span>◷</span><span>Najnovejše ture</span><span style="margin-left:auto">→</span></div>
+          </section>
+
+          <section class="guide-callout">
+            <h3>VODNIK</h3>
+            <p>Težavnostne lestvice, literatura, oprema in tehnična pojasnila.</p>
+            <a href="#" style="color:var(--accent-dark);font-weight:900">ODPRI VODNIK →</a>
+          </section>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <strong>© 2026 Explorer</strong>
+    <span>Tehnična platforma za raziskovanje kuriranih gorskih tur.</span>
+    <div class="footer-links">
+      <a href="#">Zasebnost</a>
+      <a href="#">Pogoji uporabe</a>
+      <a href="#">Kontakt</a>
+    </div>
+  </footer>
+
+  <script>
+    document.querySelectorAll('.marker').forEach((marker) => {
+      marker.addEventListener('click', () => {
+        document.querySelectorAll('.marker').forEach((item) => {
+          item.style.outline = 'none';
+        });
+        marker.style.outline = '4px solid rgba(77,126,32,.24)';
+      });
+    });
+  </script>
+</body>
+</html>

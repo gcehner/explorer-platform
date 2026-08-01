@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="sl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Explorer — Mock podrobnosti MTB ture</title>
+  <style>
+    :root {
+      --bg: #f4f5f2;
+      --surface: #ffffff;
+      --surface-soft: #eef1ea;
+      --text: #17201a;
+      --muted: #687168;
+      --border: #dfe4dc;
+      --accent: #4d7e20;
+      --accent-dark: #315714;
+      --header: #101513;
+      --shadow: 0 12px 28px rgba(20, 30, 23, .08);
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.55 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      height: 72px;
+      display: flex;
+      align-items: center;
+      padding: 0 5vw;
+      background: var(--header);
+      color: white;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 250px; }
+    .brand-mark {
+      width: 46px; height: 34px; position: relative;
+      border-bottom: 3px solid #77a947;
+    }
+    .brand-mark::before,
+    .brand-mark::after {
+      content: ""; position: absolute; bottom: 2px;
+      width: 0; height: 0;
+      border-left: 18px solid transparent;
+      border-right: 18px solid transparent;
+      border-bottom: 28px solid white;
+    }
+    .brand-mark::before { left: 0; }
+    .brand-mark::after { left: 15px; transform: scale(.78); transform-origin: bottom; opacity: .78; }
+    .brand strong { display:block; letter-spacing:.04em; font-size: 18px; }
+    .brand small { color:#9fc177; letter-spacing:.08em; }
+    nav { display:flex; gap:34px; margin-left:auto; align-items:center; }
+    nav a { color:#e5e9e5; font-weight:700; font-size:14px; }
+    nav a.active { color:#8aba4f; }
+    .nav-icon { font-size:22px; color:#d9ded9; }
+    .page { width:min(1420px, 94vw); margin: 0 auto 56px; }
+    .back-row {
+      height: 58px; display:flex; align-items:center;
+      color: var(--muted); font-size:14px;
+    }
+    .back-row .actions { display:flex; gap:12px; }
+    .ghost {
+      border:1px solid var(--border); background:var(--surface); border-radius:9px;
+      padding:9px 13px; color:var(--text); cursor:pointer;
+    }
+    .hero {
+      min-height: 430px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      position: relative;
+      box-shadow: var(--shadow);
+      background:
+        linear-gradient(90deg, rgba(7,12,9,.92) 0%, rgba(7,12,9,.50) 42%, rgba(7,12,9,.06) 72%),
+        radial-gradient(circle at 82% 22%, rgba(255,255,255,.36), transparent 24%),
+        linear-gradient(155deg, #6f7f75 0 18%, #263b31 18% 33%, #8f9e89 33% 45%, #20372d 45% 58%, #637568 58% 72%, #1d2f27 72%);
+    }
+    .hero::after {
+      content:""; position:absolute; inset:0;
+      background:
+        linear-gradient(165deg, transparent 0 56%, rgba(14,27,19,.55) 56% 64%, transparent 64%),
+        linear-gradient(195deg, transparent 0 66%, rgba(15,33,23,.56) 66% 74%, transparent 74%);
+      mix-blend-mode:multiply;
+    }
+    .hero-content {
+      position:absolute; z-index:2; left:52px; bottom:46px; max-width:680px; color:white;
+    }
+    .eyebrow { color:#a7d66d; text-transform:uppercase; font-weight:800; letter-spacing:.08em; }
+    h1 { font-size:52px; line-height:1.05; margin:12px 0 8px; letter-spacing:-.03em; }
+    .location { font-size:18px; color:#e4e8e4; }
+    .hero-metrics { display:flex; flex-wrap:wrap; gap:10px; margin-top:24px; }
+    .hero-metrics span {
+      background:rgba(12,19,15,.72); border:1px solid rgba(255,255,255,.14);
+      border-radius:999px; padding:8px 12px; backdrop-filter:blur(8px);
+    }
+    .grid { display:grid; grid-template-columns:1.35fr .85fr; gap:22px; margin-top:22px; }
+    .card {
+      background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+      padding:24px; box-shadow:var(--shadow);
+    }
+    .card h2 { margin:0 0 16px; font-size:22px; }
+    .card h3 { margin:0 0 10px; font-size:16px; }
+    .description p { margin:0 0 14px; color:#354038; }
+    .location-chips {
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin:18px 0 2px;
+    }
+    .location-chip {
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
+      padding:8px 11px;
+      border-radius:999px;
+      background:var(--surface-soft);
+      color:var(--accent-dark);
+      font-weight:800;
+      border:1px solid var(--border);
+    }
+    .facts { display:grid; grid-template-columns:1fr 1fr; gap:12px 20px; }
+    .fact { display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding:10px 0; }
+    .fact span:first-child { color:var(--muted); }
+    .metrics {
+      display:grid; grid-template-columns:repeat(6,1fr); gap:12px; margin-top:22px;
+    }
+    .metric {
+      background:var(--surface); border:1px solid var(--border); border-radius:12px;
+      padding:18px; min-height:112px; box-shadow:var(--shadow);
+    }
+    .metric small { color:var(--muted); display:block; margin-bottom:8px; }
+    .metric strong { font-size:22px; }
+    .map-profile { display:grid; grid-template-columns:.9fr 1.1fr; gap:22px; margin-top:22px; }
+    .map {
+      height:320px; border-radius:12px; position:relative; overflow:hidden;
+      background:
+        linear-gradient(135deg, rgba(80,116,57,.15), transparent 40%),
+        repeating-linear-gradient(12deg, transparent 0 20px, rgba(83,114,72,.10) 21px 22px),
+        #e8eee4;
+      border:1px solid var(--border);
+    }
+    .map::before {
+      content:""; position:absolute; inset:48px 36px 52px 34px;
+      border:5px solid var(--accent); border-left-color:transparent;
+      border-radius:48% 52% 38% 62% / 58% 38% 62% 42%;
+      transform:rotate(-7deg);
+    }
+    .map::after {
+      content:"START"; position:absolute; left:42%; top:56%;
+      background:var(--header); color:white; border-radius:999px; padding:7px 10px; font-size:11px;
+    }
+    .profile svg { width:100%; height:260px; display:block; }
+    .surface-bars { display:grid; gap:12px; margin-top:18px; }
+    .bar-row { display:grid; grid-template-columns:110px 1fr 46px; gap:10px; align-items:center; }
+    .bar { height:10px; background:#edf0eb; border-radius:99px; overflow:hidden; }
+    .bar i { display:block; height:100%; background:var(--accent); border-radius:99px; }
+    .gallery-section { margin-top:22px; }
+    .gallery-head { display:flex; align-items:end; justify-content:space-between; margin-bottom:14px; }
+    .gallery-grid {
+      display:grid;
+      grid-template-columns: 1.5fr 1fr 1fr;
+      grid-template-rows: 210px 210px;
+      gap:12px;
+    }
+    .photo {
+      position:relative; overflow:hidden; border-radius:12px; cursor:pointer; border:1px solid var(--border);
+      background:
+        radial-gradient(circle at 74% 20%, rgba(255,255,255,.48), transparent 17%),
+        linear-gradient(160deg, #94a090 0 22%, #40564a 22% 43%, #7d8d7f 43% 60%, #294132 60% 78%, #566d5d 78%);
+    }
+    .photo:nth-child(1) { grid-row:1 / span 2; }
+    .photo:nth-child(2) { background:linear-gradient(155deg,#c5d2c2 0 25%,#536858 25% 52%,#8ea08d 52% 68%,#334c39 68%); }
+    .photo:nth-child(3) { background:linear-gradient(145deg,#9da89b 0 30%,#263d31 30% 55%,#7d8c7d 55% 73%,#415b47 73%); }
+    .photo:nth-child(4) { background:linear-gradient(170deg,#aab6a7 0 24%,#556b59 24% 45%,#2c4635 45% 66%,#849485 66%); }
+    .photo:nth-child(5) { background:linear-gradient(150deg,#c4cfbf 0 28%,#566b59 28% 51%,#334b39 51% 72%,#879687 72%); }
+    .photo span {
+      position:absolute; left:14px; bottom:12px; background:rgba(10,17,12,.72); color:white;
+      padding:6px 9px; border-radius:7px; font-size:12px;
+    }
+    .primary {
+      border:0; background:var(--accent); color:white; border-radius:9px;
+      padding:12px 18px; font-weight:800; cursor:pointer;
+    }
+    .lightbox {
+      position:fixed; inset:0; z-index:50; display:none; place-items:center;
+      background:rgba(6,10,7,.88); padding:40px;
+    }
+    .lightbox.open { display:grid; }
+    .lightbox-content {
+      width:min(1050px,90vw); height:min(680px,78vh); border-radius:16px;
+      background:linear-gradient(150deg,#aab5a6 0 22%,#344d3b 22% 48%,#7d8f7f 48% 68%,#20372a 68%);
+      box-shadow:0 30px 80px rgba(0,0,0,.4); position:relative;
+    }
+    .lightbox button {
+      position:absolute; right:14px; top:14px; border:0; background:white; border-radius:999px;
+      width:42px; height:42px; cursor:pointer; font-size:22px;
+    }
+    .note {
+      margin-top:22px; padding:16px 18px; border-left:4px solid var(--accent);
+      background:#edf2e8; color:#33402f; border-radius:8px;
+    }
+    @media (max-width: 1050px) {
+      nav { gap:16px; }
+      .grid, .map-profile { grid-template-columns:1fr; }
+      .metrics { grid-template-columns:repeat(3,1fr); }
+      .gallery-grid { grid-template-columns:1fr 1fr; grid-template-rows:240px 180px 180px; }
+      .photo:nth-child(1){ grid-column:1 / span 2; grid-row:auto; }
+    }
+    @media (max-width: 760px) {
+      .topbar { height:auto; padding:15px 20px; }
+      nav { display:none; }
+      .page { width:92vw; }
+      .hero { min-height:470px; }
+      .hero-content { left:24px; right:24px; bottom:28px; }
+      h1 { font-size:39px; }
+      .metrics { grid-template-columns:repeat(2,1fr); }
+      .gallery-grid { display:grid; grid-template-columns:1fr; grid-template-rows:repeat(5,220px); }
+      .photo:nth-child(1){ grid-column:auto; }
+      .facts { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span><strong>EXPLORER</strong><small>MTB &amp; TURNO SMUČANJE</small></span>
+    </a>
+    <nav aria-label="Glavna navigacija">
+      <a class="active" href="#">MTB</a>
+      <a href="#">TURNO SMUČANJE</a>
+      <a href="#">O MENI</a>
+      <a href="#">VODNIK</a>
+      <a href="#">KONTAKT</a>
+      <span class="nav-icon" aria-hidden="true">⌕</span>
+    </nav>
+  </header>
+
+  <main class="page">
+    <div class="back-row">
+      <a href="#">← Nazaj na MTB ture</a>
+    </div>
+
+    <section class="hero" aria-labelledby="tour-title">
+      <div class="hero-content">
+        <div class="eyebrow">MTB · OBJAVLJENA TURA</div>
+        <h1 id="tour-title">Mangart – Via Italiana</h1>
+        <div class="location">Julijske Alpe · Italija</div>
+        <div class="hero-metrics">
+          <span>35,6 km</span>
+          <span>1.650 m vzpona</span>
+          <span>4–5 h</span>
+          <span>Spust S4</span>
+          <span>Krožna</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="overview">
+<div class="grid">
+        <article class="card description">
+          <h2>Tehnični opis</h2>
+          <p>Zahtevna visokogorska MTB tura z dolgim vzponom in neprekinjeno tehnično zahtevnim spustom. Trasa poteka po kombinaciji asfalta, makadama in skalnatega singletraila.</p>
+          <p>Zaključni del spusta vsebuje izpostavljene odseke težavnosti S4. Tura je najbolj primerna v suhem vremenu in ni priporočljiva neposredno po močnem dežju.</p>
+          <div class="location-chips" aria-label="Lokacija ture">
+            <span class="location-chip"><span aria-hidden="true">📍</span> Julijske Alpe</span>
+            <span class="location-chip"><span aria-hidden="true">🌍</span> Italija</span>
+          </div>
+          <div class="note"><strong>Pomembno:</strong> Na približno 15 % trase je pričakovano nošenje ali potiskanje kolesa.</div>
+        </article>
+
+        <aside class="card">
+          <h2>Ključni podatki</h2>
+          <div class="facts">
+            <div class="fact"><span>Tip ture</span><strong>Krožna</strong></div>
+            <div class="fact"><span>Izhodišče</span><strong>Passo Predil</strong></div>
+            <div class="fact"><span>Priporočeno kolo</span><strong>All Mountain</strong></div>
+            <div class="fact"><span>Fizična težavnost</span><strong>4 / 5</strong></div>
+            <div class="fact"><span>Izpostavljenost</span><strong>E3</strong></div>
+            <div class="fact"><span>Razglednost</span><strong>5 / 5</strong></div>
+            <div class="fact"><span>Delež prenašanja</span><strong>15%</strong></div>
+          </div>
+        </aside>
+      </div>
+
+      <div class="metrics">
+        <div class="metric"><small>Dolžina</small><strong>35,6 km</strong></div>
+        <div class="metric"><small>Skupni vzpon</small><strong>1,650 m</strong></div>
+        <div class="metric"><small>Skupni spust</small><strong>1,650 m</strong></div>
+        <div class="metric"><small>Najvišja točka</small><strong>2,677 m</strong></div>
+        <div class="metric"><small>Najnižja točka</small><strong>923 m</strong></div>
+        <div class="metric"><small>Predviden čas</small><strong>4–5 h</strong></div>
+      </div>
+
+      <div class="map-profile">
+        <article class="card">
+          <h2>Izhodišče</h2>
+          <p><strong>Passo Predil, Italija</strong><br><span style="color:var(--muted)">Parkirišče · 46.4776, 13.5321</span></p>
+          <div class="map" aria-label="Stiliziran prikaz zemljevida s potekom ture"></div>
+        </article>
+
+        <article class="card profile">
+          <h2>Višinski profil</h2>
+          <svg viewBox="0 0 700 270" role="img" aria-label="Višinski profil from 923 metres to 2677 metres">
+            <defs>
+              <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#5f9031" stop-opacity=".52"/>
+                <stop offset="100%" stop-color="#5f9031" stop-opacity=".06"/>
+              </linearGradient>
+            </defs>
+            <g stroke="#dfe4dc" stroke-width="1">
+              <line x1="50" y1="40" x2="680" y2="40"/>
+              <line x1="50" y1="105" x2="680" y2="105"/>
+              <line x1="50" y1="170" x2="680" y2="170"/>
+              <line x1="50" y1="235" x2="680" y2="235"/>
+            </g>
+            <path d="M50 225 L85 214 L120 195 L155 181 L190 154 L230 142 L265 114 L300 99 L335 65 L370 32 L410 76 L450 116 L490 146 L530 169 L570 188 L610 204 L650 216 L680 224 L680 235 L50 235 Z"
+                  fill="url(#fill)"/>
+            <path d="M50 225 L85 214 L120 195 L155 181 L190 154 L230 142 L265 114 L300 99 L335 65 L370 32 L410 76 L450 116 L490 146 L530 169 L570 188 L610 204 L650 216 L680 224"
+                  fill="none" stroke="#4d7e20" stroke-width="3"/>
+            <g fill="#687168" font-size="12">
+              <text x="10" y="44">2.700 m</text>
+              <text x="10" y="109">2.100 m</text>
+              <text x="10" y="174">1.500 m</text>
+              <text x="15" y="239">900 m</text>
+              <text x="48" y="260">0 km</text>
+              <text x="220" y="260">10 km</text>
+              <text x="395" y="260">20 km</text>
+              <text x="565" y="260">30 km</text>
+              <text x="645" y="260">35,6 km</text>
+            </g>
+          </svg>
+
+          <h3>Podlaga</h3>
+          <div class="surface-bars">
+            <div class="bar-row"><span>Asfalt</span><span class="bar"><i style="width:15%"></i></span><strong>15%</strong></div>
+            <div class="bar-row"><span>Makadam</span><span class="bar"><i style="width:30%"></i></span><strong>30%</strong></div>
+            <div class="bar-row"><span>Gozdna cesta</span><span class="bar"><i style="width:25%"></i></span><strong>25%</strong></div>
+            <div class="bar-row"><span>Singletrail</span><span class="bar"><i style="width:30%"></i></span><strong>30%</strong></div>
+          </div>
+        </article>
+      </div>
+
+      <section class="card gallery-section">
+        <div class="gallery-head">
+          <div>
+            <h2>Galerija</h2>
+            <div style="color:var(--muted)">Izbrane fotografije s ture</div>
+          </div>
+          <button class="ghost" type="button" id="open-gallery">Prikaži vseh 12 fotografij</button>
+        </div>
+        <div class="gallery-grid">
+          <div class="photo" tabindex="0"><span>Vršni greben</span></div>
+          <div class="photo" tabindex="0"><span>Vzpon z italijanske strani</span></div>
+          <div class="photo" tabindex="0"><span>Skalnat odsek S4</span></div>
+          <div class="photo" tabindex="0"><span>Dolina Predel</span></div>
+          <div class="photo" tabindex="0"><span>Zaključni singletrail</span></div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Galerija preview">
+    <div class="lightbox-content">
+      <button type="button" id="close-lightbox" aria-label="Zapri galerijo">×</button>
+    </div>
+  </div>
+
+  <script>
+    });
+
+    const lightbox = document.getElementById('lightbox');
+    const openGalerija = () => lightbox.classList.add('open');
+    document.querySelectorAll('.photo').forEach((photo) => {
+      photo.addEventListener('click', openGalerija);
+      photo.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') openGalerija();
+      });
+    });
+    document.getElementById('open-gallery').addEventListener('click', openGalerija);
+    document.getElementById('close-lightbox').addEventListener('click', () => lightbox.classList.remove('open'));
+    lightbox.addEventListener('click', (event) => {
+      if (event.target === lightbox) lightbox.classList.remove('open');
+    });
+  </script>
+</body>
+</html>

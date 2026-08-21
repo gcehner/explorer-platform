@@ -47,19 +47,19 @@ Examples:
 
 ## Start Location
 
-The recommended starting point of the tour.
+Starting point of the tour.
 
-May include:
+Contains:
 
-- parking area
-- mountain hut
-- village
-- trailhead
+- **Name** — human-readable name of the starting location
+- **Latitude** — geographic latitude
+- **Longitude** — geographic longitude
 
 Example:
 
-- Planica
-- Dom v Tamarju
+- Name: `Passo Predil`
+- Latitude: `46.4776`
+- Longitude: `13.5321`
 
 ---
 
@@ -97,6 +97,8 @@ This is **not** intended to be a travel story.
 
 Total route length.
 
+Derived from the GPX track.
+
 Unit:
 
 - km
@@ -106,6 +108,8 @@ Unit:
 ## Total Ascent
 
 Total accumulated elevation gain.
+
+Derived from the GPX track.
 
 Unit:
 
@@ -117,6 +121,8 @@ Unit:
 
 Total accumulated elevation loss.
 
+Derived from the GPX track.
+
 Unit:
 
 - m
@@ -126,6 +132,8 @@ Unit:
 ## Lowest Point
 
 Lowest elevation along the route.
+
+Derived from the GPX track.
 
 Unit:
 
@@ -137,6 +145,8 @@ Unit:
 
 Highest elevation along the route.
 
+Derived from the GPX track.
+
 Unit:
 
 - m
@@ -145,13 +155,29 @@ Unit:
 
 ## Estimated Duration
 
-Approximate completion time displayed as a range.
+Estimated time required to complete the tour.
+
+Stored as a range with a minimum and maximum duration.
+
+Values are expressed in hours with one decimal place.
+
+Values use increments of `0.5 h`.
 
 Examples:
 
-- 2–3 h
-- 4–5 h
-- 6–8 h
+- `3.5–4.5 h`
+- `5.0–6.0 h`
+- `7.5–9.0 h`
+
+---
+
+## Tour Date
+
+Date when the tour was performed.
+
+The date is derived from timestamps contained in the GPX track when available.
+
+If the GPX track does not contain timestamp information, the date may be provided manually as a fallback.
 
 ---
 
@@ -165,13 +191,19 @@ Technical difficulty of the descent using the S0–S5 scale.
 
 ## Physical Difficulty
 
-Subjective estimate of the required physical fitness.
+Subjective physical difficulty of the tour.
 
-Scale to be defined.
+Scale:
 
-Example:
+- `1` — least physically demanding
+- `2`
+- `3`
+- `4`
+- `5` — most physically demanding
 
-- 1–5
+The rating is relative across all published Explorer tours rather than based on an external standard.
+
+The rating takes the overall physical demands of the tour into account, not only distance or total ascent.
 
 ---
 
@@ -185,25 +217,34 @@ Describes the consequences of a riding mistake.
 
 ## Scenic Rating
 
-Subjective rating of the route's scenery.
+Subjective rating of the scenic quality of the tour.
 
-Scale to be defined.
+Scale:
 
-Example:
+- `1` — least scenic
+- `2`
+- `3`
+- `4`
+- `5` — most scenic
 
-- 1–5
+The rating is relative across all published Explorer tours rather than based on an external standard.
 
 ---
 
-## Carrying Sections
+## Carrying Percentage
 
-Estimated percentage of the route where the bike must be carried or pushed.
+Estimated percentage of the total route where the bike must be carried or pushed.
 
-Examples:
+The value includes both:
 
-- 0%
-- 10%
-- 35%
+- carrying the bike,
+- pushing the bike.
+
+Expressed as a percentage of the total route.
+
+Example:
+
+`15%`
 
 ---
 
@@ -211,37 +252,40 @@ Examples:
 
 ## Route Type
 
-Defines whether the route is:
+Defines the shape of the tour.
 
-- Loop
-- Point-to-Point
+A tour has exactly one route type.
+
+Possible values:
+
+- `Loop` — the tour starts and ends at approximately the same location
+- `Point-to-Point` — the tour starts and ends at different locations
 
 ---
 
 ## Recommended Bike Types
 
-Recommended bike categories.
+Bike types suitable for the tour.
 
-Multiple values are allowed.
+A tour can be suitable for one or more bike types.
 
-Examples:
+Possible values:
 
-- Gravel
-- XC
-- DownCountry
-- Trail
-- All Mountain
-- Enduro
+- `Gravel`
+- `XC`
+- `All Mountain`
+
+Example:
+
+`XC, All Mountain`
 
 ---
 
-## Surface
+## Surface Composition
 
-Primary riding surfaces.
+Percentage distribution of riding surfaces along the route.
 
-Multiple values are allowed.
-
-Examples:
+Possible surface types include:
 
 - Asphalt
 - Gravel
@@ -249,7 +293,16 @@ Examples:
 - Singletrack
 - Doubletrack
 
-> Consider whether this should be represented as a simple list or as percentages.
+The values should represent the approximate percentage of the total route length.
+
+Example:
+
+- Asphalt: 15%
+- Gravel: 30%
+- Forest Road: 25%
+- Singletrack: 30%
+
+The total should equal 100%.
 
 ---
 
@@ -259,7 +312,22 @@ Examples:
 
 The original GPX file imported via the CLI.
 
-Acts as the primary source of route geometry and statistics.
+Acts as the primary source of route geometry and GPX-derived statistics.
+
+The following data is derived from the GPX track:
+
+- distance
+- total ascent
+- total descent
+- lowest point
+- highest point
+- tour date, when timestamp information is available
+- elevation profile
+- route geometry
+
+GPX-derived values are normally not edited manually.
+
+Calculation and processing of GPX data, including elevation calculations, is the responsibility of the CLI.
 
 ---
 
@@ -273,25 +341,41 @@ Displayed on the tour detail page.
 
 # Media
 
+## Gallery
+
+Collection of photos related to the tour.
+
+A tour can contain multiple photos.
+
+One photo from the gallery is designated as the cover image.
+
+Photos can be added, removed and reordered before or after publication.
+
+---
+
 ## Cover Image
 
 Primary image representing the tour.
 
+The cover image is one of the photos from the gallery rather than a separate image.
+
 Displayed in lists, search results and the tour header.
 
----
-
-## Gallery
-
-Collection of photos related to the tour.
+The cover image can be changed by selecting another photo from the gallery.
 
 ---
 
 ## Video
 
-Optional video associated with the tour.
+Optional YouTube video associated with the tour.
 
-May reference YouTube or another supported provider.
+Explorer does not store the video file itself.
+
+The application stores a YouTube reference that is used to embed the video on the tour detail page.
+
+Example:
+
+`https://www.youtube.com/watch?v=...`
 
 ---
 
@@ -303,15 +387,17 @@ Publication status of the tour.
 
 Possible values:
 
-- Draft
-- Published
-
-Only published tours are visible to the public.
+- `Draft` — the tour has been imported but is only visible to the owner
+- `Published` — the tour is publicly visible
 
 ---
 
-## Publication Date
+## Published At
 
-Date when the tour was published.
+Date and time when the tour was first published.
 
-This is different from the GPX import date or creation date.
+The value is set automatically by Explorer when the tour is published.
+
+For draft tours, the value is empty.
+
+The original publication date remains unchanged when an already published tour is edited.

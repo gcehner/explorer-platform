@@ -35,11 +35,13 @@ Status: Accepted
 
 ---
 
-## Backend Owns the Domain
+## Backend Owns the Persisted Domain
 
-Business rules, validation, GPX processing and derived data generation belong to the backend.
+Business rules, validation, persistence and the Tour publication lifecycle belong to the backend.
 
-Clients are responsible only for user interaction and data transfer.
+GPX parsing and the calculation or extraction of GPX-derived data are the responsibility of the CLI. This includes route statistics, the tour date when timestamps are available, the elevation profile and route geometry.
+
+The backend receives normalized import data, validates it and persists it.
 
 Status: Accepted
 

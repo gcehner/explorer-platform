@@ -19,15 +19,17 @@
 * [ ] Add basic tour list page
 * [ ] Add tour detail page
 
-## Milestone 3 — GPX Import
+## Milestone 3 — CLI GPX Import
 
-* [ ] Upload GPX through backend API
-* [ ] Store original GPX
-* [ ] Parse track points
-* [ ] Calculate tour statistics
-* [ ] Generate elevation profile
-* [ ] Generate simplified public geometry
-* [ ] Generate downloadable public GPX
+* [ ] Upload GPX and normalized data from the CLI through the backend API
+* [ ] Store the original GPX through the backend
+* [ ] Parse track points in the CLI
+* [ ] Calculate tour statistics in the CLI
+* [ ] Extract the tour date from GPX timestamps in the CLI
+* [ ] Generate the elevation profile in the CLI
+* [ ] Generate normalized route geometry in the CLI
+* [ ] Generate a downloadable public GPX in the CLI
+* [ ] Validate and persist normalized GPX-derived data in the backend
 
 ## Milestone 4 — Garmin CLI
 

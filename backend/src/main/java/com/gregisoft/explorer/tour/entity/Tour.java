@@ -106,7 +106,7 @@ public class Tour {
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(
             name = "tour_bike_type",
-            joinColumns = @JoinColumn(name = "tour_id"),
+            joinColumns = @JoinColumn(name = "tour_id", nullable = false),
             uniqueConstraints = @UniqueConstraint(columnNames = {"tour_id", "bike_type"})
     )
     @Enumerated(EnumType.STRING)
@@ -116,15 +116,18 @@ public class Tour {
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(
             name = "tour_surface_share",
-            joinColumns = @JoinColumn(name = "tour_id"),
+            joinColumns = @JoinColumn(name = "tour_id", nullable = false),
             uniqueConstraints = @UniqueConstraint(columnNames = {"tour_id", "surface_type"})
     )
-    @OrderColumn(name = "surface_order")
+    @OrderColumn(name = "surface_order", nullable = false)
     private List<SurfaceShare> surfaceComposition = new ArrayList<>();
 
     @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "tour_elevation_profile", joinColumns = @JoinColumn(name = "tour_id"))
-    @OrderColumn(name = "sample_index")
+    @CollectionTable(
+            name = "tour_elevation_profile",
+            joinColumns = @JoinColumn(name = "tour_id", nullable = false)
+    )
+    @OrderColumn(name = "sample_index", nullable = false)
     private List<ElevationProfileSample> elevationProfile = new ArrayList<>();
 
     @OneToOne(mappedBy = "tour", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
@@ -135,7 +138,7 @@ public class Tour {
     private List<Photo> photos = new ArrayList<>();
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cover_photo_id")
+    @JoinColumn(name = "cover_photo_id", unique = true)
     private Photo coverPhoto;
 
     @Column(name = "youtube_video_id", length = 20)

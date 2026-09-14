@@ -9,7 +9,7 @@ CLI
  ▼
 Quarkus Backend
  │
- ├── PostgreSQL
+ ├── PostgreSQL with PostGIS
  ├── File Storage
  └── Normalized Tour Data Persistence
  │
@@ -66,7 +66,7 @@ It is responsible for:
 * calculating distance and elevation statistics
 * extracting the tour date from GPX timestamps when available
 * generating elevation profiles
-* generating normalized route geometry
+* generating normalized route geometry as a GeoJSON LineString
 * importing photos
 * creating tour drafts
 * publishing tours
@@ -86,4 +86,10 @@ The database stores metadata and references to files.
 
 Original GPX files are immutable.
 
-GPX-derived data, including statistics, elevation profiles and route geometry, is calculated or extracted by the CLI. The CLI sends normalized import data to the backend, which validates and persists it.
+GPX-derived data, including statistics, elevation profiles and route geometry, is calculated or extracted by the CLI. The CLI sends route geometry as a normalized GeoJSON LineString in `[longitude, latitude]` order. The backend validates it and persists it in PostGIS as `geometry(LineString, 4326)` without retaining a second GeoJSON representation.
+
+The original GPX is retained separately in file storage. The backend stores it without parsing it and records an opaque, backend-generated storage reference.
+
+For V1, the file is stored before the database transaction commits. A storage failure prevents the
+Tour from being persisted. If database persistence subsequently fails, the stored GPX can remain as
+an orphan; distributed transaction and cleanup machinery are intentionally outside this slice.

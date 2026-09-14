@@ -274,6 +274,7 @@ Possible values:
 - `Gravel`
 - `XC`
 - `All Mountain`
+- `Enduro`
 
 Example:
 
@@ -328,6 +329,14 @@ The following data is derived from the GPX track:
 GPX-derived values are normally not edited manually.
 
 Calculation and processing of GPX data, including elevation calculations, is the responsibility of the CLI.
+
+The CLI also produces normalized route geometry as a GeoJSON LineString using standard
+`[longitude, latitude]` coordinate order. GeoJSON is the import transport representation only.
+The backend validates the LineString and persists it in PostGIS as
+`geometry(LineString, 4326)`; it does not parse the GPX or retain a duplicate GeoJSON value.
+
+The immutable original GPX is stored separately from the route geometry. The backend assigns its
+opaque storage reference.
 
 ---
 
@@ -387,7 +396,7 @@ Publication status of the tour.
 
 Possible values:
 
-- `Draft` — the tour has been imported but is only visible to the owner
+- `Draft` — the tour has been imported but is not publicly visible
 - `Published` — the tour is publicly visible
 
 ---

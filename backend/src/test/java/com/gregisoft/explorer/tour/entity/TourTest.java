@@ -12,6 +12,10 @@ import com.gregisoft.explorer.tour.value.StartLocation;
 import com.gregisoft.explorer.tour.value.SurfaceShare;
 import com.gregisoft.explorer.tour.value.TourStatistics;
 
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.PrecisionModel;
+
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -164,6 +168,12 @@ class TourTest {
         tour.setElevationProfile(List.of(
                 new ElevationProfileSample(new BigDecimal("0.000"), 923),
                 new ElevationProfileSample(new BigDecimal("35.600"), 923)
+        ));
+        tour.setRouteGeometry(new GeometryFactory(new PrecisionModel(), 4326).createLineString(
+                new Coordinate[]{
+                        new Coordinate(13.5321, 46.4776),
+                        new Coordinate(13.5432, 46.4890)
+                }
         ));
         tour.attachGpxTrack(new GpxTrack("mangart.gpx", "gpx/original/mangart.gpx"));
         return tour;

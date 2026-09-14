@@ -32,6 +32,9 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.LineString;
+
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -81,6 +84,9 @@ public class Tour {
 
     @Column(name = "tour_date")
     private LocalDate tourDate;
+
+    @Column(name = "route_geometry", columnDefinition = "geometry(LineString,4326)")
+    private LineString routeGeometry;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "technical_difficulty", length = 2)
@@ -200,6 +206,31 @@ public class Tour {
 
     public void setTourDate(LocalDate tourDate) {
         this.tourDate = Objects.requireNonNull(tourDate, "Tour date is required.");
+    }
+
+    public void setRouteGeometry(LineString routeGeometry) {
+        LineString geometry = Objects.requireNonNull(routeGeometry, "Route geometry is required.");
+        if (geometry.isEmpty()) {
+            throw new IllegalArgumentException("Route geometry must not be empty.");
+        }
+        if (geometry.getSRID() != 4326) {
+            throw new IllegalArgumentException("Route geometry must use SRID 4326.");
+        }
+        if (!geometry.isValid()) {
+            throw new IllegalArgumentException("Route geometry must be valid.");
+        }
+        for (Coordinate coordinate : geometry.getCoordinates()) {
+            if (!Double.isFinite(coordinate.getX()) || !Double.isFinite(coordinate.getY())) {
+                throw new IllegalArgumentException("Route coordinates must be finite.");
+            }
+            if (coordinate.getX() < -180 || coordinate.getX() > 180) {
+                throw new IllegalArgumentException("Route longitude must be between -180 and 180.");
+            }
+            if (coordinate.getY() < -90 || coordinate.getY() > 90) {
+                throw new IllegalArgumentException("Route latitude must be between -90 and 90.");
+            }
+        }
+        this.routeGeometry = (LineString) geometry.copy();
     }
 
     public void setDifficulty(
@@ -333,6 +364,7 @@ public class Tour {
         requirePresent(statistics, "Tour statistics");
         requirePresent(estimatedDuration, "Estimated duration");
         requirePresent(tourDate, "Tour date");
+        requirePresent(routeGeometry, "Route geometry");
         requirePresent(technicalDifficulty, "Technical difficulty");
         requirePresent(physicalDifficulty, "Physical difficulty");
         requirePresent(exposureRating, "Exposure rating");
@@ -471,6 +503,10 @@ public class Tour {
 
     public LocalDate getTourDate() {
         return tourDate;
+    }
+
+    public LineString getRouteGeometry() {
+        return routeGeometry == null ? null : (LineString) routeGeometry.copy();
     }
 
     public TechnicalDifficulty getTechnicalDifficulty() {

@@ -87,11 +87,24 @@ Status: Accepted
 
 ---
 
-## Tours Have Owners
+## V1 Has No Tour Ownership
 
-Every tour belongs to a user, even while the platform initially supports only one user.
+Explorer V1 is single-user and authentication is not part of the current scope.
 
-This allows future multi-user support without restructuring the core domain.
+Tours therefore have no User entity or owner relationship. Ownership will be designed only when
+multi-user requirements are defined.
+
+Status: Accepted
+
+---
+
+## Route Geometry Uses PostGIS
+
+The CLI generates normalized route geometry as a GeoJSON LineString using `[longitude, latitude]`
+coordinate order. GeoJSON is an API representation only.
+
+The backend validates the geometry and persists it once as `geometry(LineString, 4326)` in PostGIS.
+The original immutable GPX is retained separately in file storage. The backend does not parse GPX.
 
 Status: Accepted
 

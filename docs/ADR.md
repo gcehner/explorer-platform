@@ -53,6 +53,20 @@ The first content management interface is a Java CLI.
 
 An admin panel may be added later without changing the backend domain model or import APIs.
 
+The V1 import command is:
+
+```text
+explorer tour import <file.gpx> [--backend-url <url>]
+```
+
+The CLI uses JPX to read exactly one GPX track and performs distance, elevation, date, profile and
+route-geometry processing locally. It sends normalized metadata as JSON and the original unchanged
+GPX as `application/gpx+xml` in one multipart request to
+`POST /api/management/imports/gpx`. It does not depend on backend DTOs or persistence types.
+
+The backend URL is selected from `--backend-url`, then `EXPLORER_BACKEND_URL`, then
+`http://localhost:8080`.
+
 Status: Accepted
 
 ---

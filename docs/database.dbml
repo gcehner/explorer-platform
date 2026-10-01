@@ -1,0 +1,156 @@
+// Documentation view of the Explorer database after all current Flyway migrations.
+// Flyway migrations remain the executable source of truth.
+// Update this DBML whenever a schema migration changes the database.
+// Enums below document VARCHAR columns constrained by CHECK clauses; PostgreSQL enum types are not used.
+
+Enum publication_status {
+  DRAFT
+  PUBLISHED
+}
+
+Enum route_type {
+  LOOP
+  POINT_TO_POINT
+}
+
+Enum technical_difficulty {
+  S0
+  S1
+  S2
+  S3
+  S4
+  S5
+}
+
+Enum exposure_rating {
+  E1
+  E2
+  E3
+  E4
+}
+
+Enum bike_type {
+  GRAVEL
+  XC
+  ALL_MOUNTAIN
+  ENDURO
+}
+
+Enum surface_type {
+  ASPHALT
+  GRAVEL
+  FOREST_ROAD
+  SINGLETRACK
+  DOUBLETRACK
+}
+
+Table tour {
+  id bigint [pk, increment]
+  title varchar(200)
+  mountain_range varchar(200)
+  country_code varchar(2) [note: 'When present, must match an uppercase ISO 3166-1 alpha-2 shape: ^[A-Z]{2}$.']
+  start_location_name varchar(200)
+  start_latitude numeric(9,7)
+  start_longitude numeric(10,7)
+  short_description varchar(500)
+  technical_description varchar(10000)
+  distance_km numeric(8,2)
+  total_ascent_m integer
+  total_descent_m integer
+  lowest_point_m integer
+  highest_point_m integer
+  duration_min_hours numeric(4,1)
+  duration_max_hours numeric(4,1)
+  tour_date date
+  technical_difficulty technical_difficulty
+  physical_difficulty integer [note: 'When present, must be between 1 and 5.']
+  exposure_rating exposure_rating
+  scenic_rating integer [note: 'When present, must be between 1 and 5.']
+  carrying_percentage integer [note: 'When present, must be between 0 and 100.']
+  route_type route_type
+  cover_photo_id bigint [unique, note: 'Optional cover photo. The composite FK with tour.id ensures that the selected photo belongs to this Tour.']
+  youtube_video_id varchar(20) [note: 'When present, must be an 11-character YouTube video id matching ^[A-Za-z0-9_-]{11}$.']
+  publication_status publication_status [not null, default: 'DRAFT']
+  published_at timestamptz(6)
+  route_geometry geometry [note: 'Actual PostgreSQL/PostGIS type: geometry(LineString, 4326). Nullable for incomplete DRAFT tours. CHECK requires a non-empty, valid geometry covered by the WGS84 longitude/latitude envelope.']
+
+  Note: '''
+  Optional text values must not be blank when present.
+  Start-location name, latitude, and longitude are either all null or all present; latitude is -90..90 and longitude is -180..180.
+  Statistics are either all null or all present; distance/ascent/descent are non-negative and highest point is not below lowest point.
+  Duration bounds are either both null or both present; values are positive 0.5-hour increments and maximum is not below minimum.
+  DRAFT requires published_at to be null; PUBLISHED requires published_at to be non-null.
+  PostgreSQL also has GiST index idx_tour_route_geometry on route_geometry. DBML does not express the PostgreSQL USING GIST access method here.
+  '''
+}
+
+Table gpx_track {
+  id bigint [pk, increment]
+  tour_id bigint [not null, unique]
+  original_filename varchar(255) [not null, note: 'Must not be blank.']
+  source_reference varchar(1000) [not null, note: 'Opaque storage reference; must not be blank.']
+}
+
+Table tour_photo {
+  id bigint [pk, increment]
+  tour_id bigint [not null]
+  image_reference varchar(1000) [not null, note: 'Must not be blank.']
+  caption varchar(500) [note: 'Must not be blank when present.']
+  display_order integer [not null, note: 'Must be non-negative.']
+
+  indexes {
+    (tour_id, display_order) [unique, name: 'uq_tour_photo_display_order']
+    (id, tour_id) [unique, name: 'uq_tour_photo_id_and_tour']
+  }
+}
+
+Table tour_bike_type {
+  tour_id bigint [not null]
+  bike_type bike_type [not null]
+
+  indexes {
+    (tour_id, bike_type) [pk, name: 'pk_tour_bike_type']
+  }
+}
+
+Table tour_surface_share {
+  tour_id bigint [not null]
+  surface_order integer [not null, note: 'Must be non-negative.']
+  surface_type surface_type [not null]
+  percentage integer [not null, note: 'Must be between 0 and 100. The database does not enforce that all shares for a Tour total 100.']
+
+  indexes {
+    (tour_id, surface_order) [pk, name: 'pk_tour_surface_share']
+    (tour_id, surface_type) [unique, name: 'uq_tour_surface_share_type']
+  }
+}
+
+Table tour_elevation_profile {
+  tour_id bigint [not null]
+  sample_index integer [not null, note: 'Must be non-negative and determines profile order.']
+  distance_km numeric(10,3) [not null, note: 'Must be non-negative.']
+  elevation_m integer [not null]
+
+  indexes {
+    (tour_id, sample_index) [pk, name: 'pk_tour_elevation_profile']
+  }
+}
+
+Table application_info {
+  id integer [pk]
+  name varchar(100) [not null]
+  version varchar(20) [not null]
+
+  Note: 'Migration V2 seeds id 1 with Explorer Platform version 0.1.0.'
+}
+
+Ref fk_gpx_track_tour: tour.id - gpx_track.tour_id [delete: cascade]
+Ref fk_tour_photo_tour: tour.id < tour_photo.tour_id [delete: cascade]
+Ref fk_tour_bike_type_tour: tour.id < tour_bike_type.tour_id [delete: cascade]
+Ref fk_tour_surface_share_tour: tour.id < tour_surface_share.tour_id [delete: cascade]
+Ref fk_tour_elevation_profile_tour: tour.id < tour_elevation_profile.tour_id [delete: cascade]
+
+// Composite ownership-preserving cover relationship:
+// tour.(cover_photo_id, id) references tour_photo.(id, tour_id).
+// PostgreSQL declares this FK DEFERRABLE INITIALLY DEFERRED; DBML cannot model deferrability.
+Ref fk_tour_cover_photo: tour_photo.(id, tour_id) - tour.(cover_photo_id, id)

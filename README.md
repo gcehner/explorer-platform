@@ -27,4 +27,24 @@ The goal is to build a simple, extensible platform that starts as a personal pro
 
 ## Status
 
-Creating project structure and docs...
+The backend supports creating DRAFT MTB tours from normalized GPX imports. The Java CLI parses the
+source GPX, calculates the normalized route data and uploads both that data and the unchanged source
+file to the backend.
+
+## CLI GPX import
+
+The CLI requires Java 21. Build it with:
+
+```text
+cd cli
+mvn package
+```
+
+Import one GPX track into a locally running backend:
+
+```text
+java -jar target/explorer.jar tour import path/to/track.gpx
+```
+
+Use `--backend-url` to select another backend. If the option is omitted, the CLI uses
+`EXPLORER_BACKEND_URL`, then falls back to `http://localhost:8080`.

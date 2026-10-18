@@ -15,5 +15,28 @@ services:
     volumes:
       - explorer-postgres-data:/var/lib/postgresql/data
 
+  postgres-test:
+    image: postgis/postgis:17-3.5
+
+    container_name: explorer-postgres-test
+
+    environment:
+      POSTGRES_DB: explorer_test
+      POSTGRES_USER: explorer
+      POSTGRES_PASSWORD: explorer
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - explorer-postgres-test-data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U explorer -d explorer_test"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+
 volumes:
   explorer-postgres-data:
+  explorer-postgres-test-data:

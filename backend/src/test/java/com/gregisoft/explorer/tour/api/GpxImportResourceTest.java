@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
+import static com.gregisoft.explorer.test.TestDatabaseSafety.assertUsingIsolatedTestDatabase;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,6 +32,7 @@ class GpxImportResourceTest {
     @BeforeEach
     @Transactional
     void cleanState() throws IOException {
+        assertUsingIsolatedTestDatabase(entityManager);
         entityManager.createQuery("delete from GpxTrack").executeUpdate();
         entityManager.createQuery("delete from Tour").executeUpdate();
         if (Files.isDirectory(STORAGE_ROOT)) {

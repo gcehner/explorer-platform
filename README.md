@@ -48,3 +48,8 @@ java -jar target/explorer.jar tour import path/to/track.gpx
 
 Use `--backend-url` to select another backend. If the option is omitted, the CLI uses
 `EXPLORER_BACKEND_URL`, then falls back to `http://localhost:8080`.
+
+## Testing
+
+Backend integration tests require the isolated `explorer_test` PostGIS database. See
+[docs/TESTING.md](docs/TESTING.md) for setup and test commands.

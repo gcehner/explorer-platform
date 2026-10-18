@@ -51,7 +51,7 @@ public class TourReadService {
         return toResponse(tour);
     }
 
-    private static TourDetailResponse toResponse(Tour tour) {
+    static TourDetailResponse toResponse(Tour tour) {
         Photo coverPhoto = tour.getCoverPhoto();
         return new TourDetailResponse(
                 tour.getId(),

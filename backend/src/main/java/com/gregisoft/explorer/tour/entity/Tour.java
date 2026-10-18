@@ -179,6 +179,23 @@ public class Tour {
         this.countryCode = normalizedCountryCode;
     }
 
+    public void setTitle(String title) {
+        this.title = requireText(title, "Title");
+    }
+
+    public void setMountainRange(String mountainRange) {
+        this.mountainRange = requireText(mountainRange, "Mountain range");
+    }
+
+    public void setCountryCode(String countryCode) {
+        String normalizedCountryCode = requireText(countryCode, "Country code")
+                .toUpperCase(Locale.ROOT);
+        if (!COUNTRY_CODE.matcher(normalizedCountryCode).matches()) {
+            throw new IllegalArgumentException("Country code must be an ISO 3166-1 alpha-2 code.");
+        }
+        this.countryCode = normalizedCountryCode;
+    }
+
     public void setStartLocation(StartLocation startLocation) {
         this.startLocation = Objects.requireNonNull(startLocation, "Start location is required.");
     }
@@ -191,6 +208,14 @@ public class Tour {
         );
         this.shortDescription = normalizedShortDescription;
         this.technicalDescription = normalizedTechnicalDescription;
+    }
+
+    public void setShortDescription(String shortDescription) {
+        this.shortDescription = requireText(shortDescription, "Short description");
+    }
+
+    public void setTechnicalDescription(String technicalDescription) {
+        this.technicalDescription = requireText(technicalDescription, "Technical description");
     }
 
     public void setStatistics(TourStatistics statistics) {
@@ -258,6 +283,32 @@ public class Tour {
         this.exposureRating = newExposureRating;
         this.physicalDifficulty = newPhysicalDifficulty;
         this.scenicRating = newScenicRating;
+        this.carryingPercentage = carryingPercentage;
+    }
+
+    public void setTechnicalDifficulty(TechnicalDifficulty technicalDifficulty) {
+        this.technicalDifficulty = Objects.requireNonNull(
+                technicalDifficulty,
+                "Technical difficulty is required."
+        );
+    }
+
+    public void setPhysicalDifficulty(int physicalDifficulty) {
+        this.physicalDifficulty = requireRating(physicalDifficulty, "Physical difficulty");
+    }
+
+    public void setExposureRating(ExposureRating exposureRating) {
+        this.exposureRating = Objects.requireNonNull(exposureRating, "Exposure rating is required.");
+    }
+
+    public void setScenicRating(int scenicRating) {
+        this.scenicRating = requireRating(scenicRating, "Scenic rating");
+    }
+
+    public void setCarryingPercentage(int carryingPercentage) {
+        if (carryingPercentage < 0 || carryingPercentage > 100) {
+            throw new IllegalArgumentException("Carrying percentage must be between 0 and 100.");
+        }
         this.carryingPercentage = carryingPercentage;
     }
 

@@ -131,9 +131,12 @@ Public read operations and authenticated management operations use separate API 
 Example:
 
 ```text
-/api/public/tours
+/api/tours
 /api/management/tours
 /api/management/imports
 ```
+
+The management API is currently unauthenticated. It must not be exposed publicly until access
+control is implemented.
 
 Status: Accepted

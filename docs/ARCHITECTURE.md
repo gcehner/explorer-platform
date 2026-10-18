@@ -34,6 +34,14 @@ It owns:
 
 The backend is the single source of truth.
 
+### API exposure
+
+Public Tour reads use the `/api/tours` namespace. Management operations use
+`/api/management`.
+
+The management API is currently unauthenticated and must not be exposed publicly without access
+control.
+
 ---
 
 ## Frontend

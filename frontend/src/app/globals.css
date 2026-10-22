@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f4f5f2;
+  --foreground: #17201a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+}
+
+.tour-hero {
+  background:
+    linear-gradient(90deg, rgba(7, 12, 9, 0.94) 0%, rgba(7, 12, 9, 0.58) 48%, rgba(7, 12, 9, 0.14) 76%),
+    radial-gradient(circle at 82% 22%, rgba(255, 255, 255, 0.3), transparent 24%),
+    linear-gradient(155deg, #7d8d82 0 18%, #2c4236 18% 33%, #95a28f 33% 45%, #233b30 45% 58%, #687a6c 58% 72%, #1d2f27 72%);
+}
+
+.tour-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(165deg, transparent 0 56%, rgba(14, 27, 19, 0.56) 56% 64%, transparent 64%),
+    linear-gradient(195deg, transparent 0 66%, rgba(15, 33, 23, 0.56) 66% 74%, transparent 74%);
+  mix-blend-mode: multiply;
+}
+
+.maplibregl-ctrl-attrib {
+  font-size: 11px;
+}

@@ -14,11 +14,10 @@ import {
 } from "@/lib/tour-format";
 import type { TourDetail } from "@/lib/tour-types";
 
-const TOUR_ID = 34;
 const DEFAULT_MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
 
 export const metadata: Metadata = {
-  title: "Predogled MTB ture 34",
+  title: "Predogled MTB ture",
 };
 
 // This local preview intentionally waits for fresh management data on each request.
@@ -65,34 +64,58 @@ function formatTourDate(value: string): string {
   }).format(new Date(`${value}T00:00:00Z`));
 }
 
-function ErrorState({ message }: Readonly<{ message: string }>) {
+function ErrorState({
+  tourId,
+  message,
+}: Readonly<{ tourId: number; message: string }>) {
   return (
     <main className="mx-auto flex min-h-screen w-[min(760px,92vw)] items-center">
       <Card>
         <p className="text-sm font-extrabold tracking-[0.12em] text-red-700 uppercase">
           Predogled ni na voljo
         </p>
-        <h1 className="mt-3 text-3xl font-bold">Ture 34 ni bilo mogoče naložiti.</h1>
+        <h1 className="mt-3 text-3xl font-bold">
+          Ture {tourId} ni bilo mogoče naložiti.
+        </h1>
         <p className="mt-4 text-stone-600">{message}</p>
       </Card>
     </main>
   );
 }
 
-export default async function TourPreviewPage() {
+function parseTourId(value: string): number | null {
+  if (!/^\d+$/.test(value)) {
+    return null;
+  }
+
+  const id = Number(value);
+  return Number.isSafeInteger(id) && id > 0 ? id : null;
+}
+
+export default async function TourPreviewPage(
+  props: PageProps<"/management/tours/[id]">,
+) {
   if (process.env.NODE_ENV === "production") {
+    notFound();
+  }
+
+  const { id: routeId } = await props.params;
+  const tourId = parseTourId(routeId);
+
+  if (tourId === null) {
     notFound();
   }
 
   let tour: TourDetail;
   try {
-    tour = await getManagementTour(TOUR_ID);
+    tour = await getManagementTour(tourId);
   } catch (error) {
     if (error instanceof TourApiError && error.status === 404) {
       notFound();
     }
     return (
       <ErrorState
+        tourId={tourId}
         message={
           error instanceof Error
             ? error.message

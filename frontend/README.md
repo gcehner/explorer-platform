@@ -2,16 +2,10 @@
 
 The Explorer frontend uses Next.js App Router, React, TypeScript, Tailwind CSS and MapLibre GL JS.
 
-The first milestone is a local-only preview of any DRAFT tour at the dynamic route:
+The local management preview supports any tour through the dynamic route:
 
 ```text
 http://localhost:3000/management/tours/{id}
-```
-
-Tour 34 is the current development example:
-
-```text
-http://localhost:3000/management/tours/34
 ```
 
 The preview is deliberately disabled when `NODE_ENV=production`. The management API is currently unauthenticated and must not be exposed publicly.
@@ -20,7 +14,7 @@ The preview is deliberately disabled when `NODE_ENV=production`. The management 
 
 - Node.js and npm
 - Explorer's Quarkus backend running locally
-- A tour with a positive integer ID available from `GET http://localhost:8080/api/management/tours/{id}` (Tour 34 is the development example)
+- A tour with a positive integer ID available from `GET http://localhost:8080/api/management/tours/{id}`
 
 The backend URL uses the server-only `EXPLORER_BACKEND_URL` variable. Do not rename it with a `NEXT_PUBLIC_` prefix.
 
@@ -35,7 +29,7 @@ npm install
 npm run dev
 ```
 
-Then open `http://localhost:3000/management/tours/34` for the development example, or replace `34` with another available tour ID.
+Then open `http://localhost:3000/management/tours/{id}`, replacing `{id}` with the ID of an available tour.
 
 To use a different local backend, edit `EXPLORER_BACKEND_URL` in `.env.local`. The browser never receives this value; the Next.js server fetches the tour and passes only the response data to the page.
 

@@ -1,8 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f4f5f2;
-  --foreground: #17201a;
+  --color-background: #f4f5f2;
+  --color-surface: #ffffff;
+  --color-surface-soft: #eef1ea;
+  --color-foreground: #17201a;
+  --color-muted: #687168;
+  --color-border: #dfe4dc;
+  --color-mtb: #4d7e20;
+  --color-mtb-dark: #315714;
+  --color-ski: #2f78bd;
+  --color-header: #101513;
+  --surface-shadow: 0 12px 30px rgba(20, 30, 23, 0.08);
+  --surface-radius: 14px;
+  --content-width: 1420px;
+  --site-header-height: 72px;
 }
 
 * {
@@ -15,10 +27,53 @@ html {
 
 body {
   margin: 0;
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--color-background);
+  color: var(--color-foreground);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
+}
+
+.site-container {
+  width: min(var(--content-width), 92vw);
+  margin-inline: auto;
+}
+
+.surface-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--surface-radius);
+  background: var(--color-surface);
+  box-shadow: var(--surface-shadow);
+}
+
+.explorer-brand-mark {
+  position: relative;
+  width: 50px;
+  height: 36px;
+  flex: none;
+  border-bottom: 3px solid #77a947;
+}
+
+.explorer-brand-mark::before,
+.explorer-brand-mark::after {
+  position: absolute;
+  bottom: 2px;
+  width: 0;
+  height: 0;
+  border-right: 18px solid transparent;
+  border-bottom: 28px solid currentColor;
+  border-left: 18px solid transparent;
+  content: "";
+}
+
+.explorer-brand-mark::before {
+  left: 0;
+}
+
+.explorer-brand-mark::after {
+  left: 16px;
+  opacity: 0.76;
+  transform: scale(0.76);
+  transform-origin: bottom;
 }
 
 .tour-hero {

@@ -16,6 +16,8 @@ Frontend
 - Tailwind CSS
 - MapLibre
 
+Public routes and navigation behavior are documented in [NAVIGATION.md](NAVIGATION.md).
+
 CLI
 
 - Java

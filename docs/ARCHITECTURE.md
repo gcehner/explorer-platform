@@ -48,6 +48,9 @@ control.
 
 Next.js is used for the public website.
 
+The approved public information architecture and navigation behavior are defined in
+[NAVIGATION.md](NAVIGATION.md).
+
 It is responsible for:
 
 * tour pages

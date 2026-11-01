@@ -43,6 +43,8 @@ import java.util.Set;
 import static com.gregisoft.explorer.test.TestDatabaseSafety.assertUsingIsolatedTestDatabase;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
@@ -319,6 +321,190 @@ class TourDiscoveryResourceTest {
         assertFalse(ids(secondPage).contains(newlyPublished));
     }
 
+    @Test
+    void returnsValidLowZoomClustersAndExcludesDrafts() {
+        createPublishedTour(
+                "Cluster one", "SI", TechnicalDifficulty.S2,
+                "20.00", 1_000, 14.0, 46.0, BASE_PUBLICATION_TIME
+        );
+        createPublishedTour(
+                "Cluster two", "SI", TechnicalDifficulty.S3,
+                "25.00", 1_200, 14.0, 46.0, BASE_PUBLICATION_TIME.minusHours(1)
+        );
+        createDraftTour("Draft cluster member", 14.0, 46.0);
+
+        Response response = mapRequest(BBOX, "9").get("/api/tours/map");
+
+        response.then()
+                .statusCode(200)
+                .body("type", equalTo("FeatureCollection"))
+                .body("metadata.zoom", equalTo(9))
+                .body("metadata.mode", equalTo("CLUSTERS"))
+                .body("features", hasSize(1))
+                .body("features[0].type", equalTo("Feature"))
+                .body("features[0].geometry.type", equalTo("Point"))
+                .body("features[0].geometry.coordinates", hasSize(2))
+                .body("features[0].properties.kind", equalTo("cluster"))
+                .body("features[0].properties.count", equalTo(2))
+                .body("features[0].properties.clusterKey", notNullValue())
+                .body("features[0].properties.bounds", hasSize(4));
+
+        String body = response.asString();
+        assertFalse(body.contains("Draft cluster member"));
+        assertFalse(body.contains("routeGeometry"));
+        assertFalse(body.contains("elevationProfile"));
+        assertFalse(body.contains("gpx"));
+    }
+
+    @Test
+    void returnsEmptyFeatureCollectionForEmptyViewport() {
+        mapRequest("10,40,11,41", "12")
+                .get("/api/tours/map")
+                .then()
+                .statusCode(200)
+                .body("type", equalTo("FeatureCollection"))
+                .body("metadata.mode", equalTo("TOURS"))
+                .body("metadata.featureCount", equalTo(0))
+                .body("features", hasSize(0));
+    }
+
+    @Test
+    void returnsIndividualToursAtHighZoomIncludingBboxBoundary() {
+        long inside = createPublishedTour(
+                "High zoom inside", "SI", TechnicalDifficulty.S2,
+                "20.00", 1_000, 14.0, 46.0, BASE_PUBLICATION_TIME
+        );
+        long boundary = createPublishedTour(
+                "High zoom boundary", "SI", TechnicalDifficulty.S4,
+                "25.00", 1_200, 13.0, 46.0, BASE_PUBLICATION_TIME.minusHours(1)
+        );
+
+        Response response = mapRequest(BBOX, "12").get("/api/tours/map");
+
+        response.then()
+                .statusCode(200)
+                .body("metadata.mode", equalTo("TOURS"))
+                .body("features", hasSize(2))
+                .body("features.properties.kind", everyItem(equalTo("tour")));
+        assertEquals(Set.of(inside, boundary), mapTourIds(response));
+        List<List<Number>> coordinates = response.jsonPath().getList(
+                "features.geometry.coordinates"
+        );
+        assertTrue(coordinates.stream().allMatch(coordinate ->
+                coordinate.getFirst().doubleValue() >= 13.0
+                        && coordinate.getFirst().doubleValue() <= 15.0));
+    }
+
+    @Test
+    void createsMixedFeaturesAtIntermediateZoomWithStableClusterKeys() {
+        createPublishedTour(
+                "Together one", "SI", TechnicalDifficulty.S2,
+                "20.00", 1_000, 14.0, 46.0, BASE_PUBLICATION_TIME
+        );
+        createPublishedTour(
+                "Together two", "SI", TechnicalDifficulty.S3,
+                "20.00", 1_000, 14.0, 46.0, BASE_PUBLICATION_TIME.minusHours(1)
+        );
+        long separate = createPublishedTour(
+                "Separate", "SI", TechnicalDifficulty.S4,
+                "20.00", 1_000, 14.5, 46.0, BASE_PUBLICATION_TIME.minusHours(2)
+        );
+
+        Response first = mapRequest(BBOX, "10").get("/api/tours/map");
+        Response second = mapRequest(BBOX, "10").get("/api/tours/map");
+
+        first.then()
+                .statusCode(200)
+                .body("metadata.mode", equalTo("MIXED"))
+                .body("features", hasSize(2));
+        assertEquals(2, first.jsonPath().getInt(
+                "features.find { it.properties.kind == 'cluster' }.properties.count"
+        ));
+        assertEquals(separate, first.jsonPath().getLong(
+                "features.find { it.properties.kind == 'tour' }.properties.tourId"
+        ));
+        assertEquals(clusterKeys(first), clusterKeys(second));
+    }
+
+    @Test
+    void appliesTheSameFiltersToListAndMapMembership() {
+        long first = createPublishedTour(
+                "Matching one", "SI", TechnicalDifficulty.S2,
+                "20.00", 1_000, 14.0, 46.0, BASE_PUBLICATION_TIME
+        );
+        long second = createPublishedTour(
+                "Matching two", "SI", TechnicalDifficulty.S3,
+                "40.00", 2_000, 14.2, 46.0, BASE_PUBLICATION_TIME.minusHours(1)
+        );
+        createPublishedTour(
+                "Wrong country", "IT", TechnicalDifficulty.S2,
+                "20.00", 1_000, 14.3, 46.0, BASE_PUBLICATION_TIME.minusHours(2)
+        );
+        createPublishedTour(
+                "Wrong difficulty", "SI", TechnicalDifficulty.S4,
+                "20.00", 1_000, 14.4, 46.0, BASE_PUBLICATION_TIME.minusHours(3)
+        );
+
+        RequestSpecification listRequest = filteredRequest(request(BBOX));
+        RequestSpecification mapRequest = filteredRequest(mapRequest(BBOX, "22"));
+        Response list = listRequest.get("/api/tours");
+        Response map = mapRequest.get("/api/tours/map");
+
+        list.then().statusCode(200);
+        map.then().statusCode(200).body("metadata.mode", equalTo("TOURS"));
+        assertEquals(Set.of(first, second), new HashSet<>(ids(list)));
+        assertEquals(new HashSet<>(ids(list)), mapTourIds(map));
+    }
+
+    @Test
+    void rejectsInvalidMapBoundingBoxesZoomsAndFilters() {
+        assertMapBadRequest(given().queryParam("zoom", "9"),
+                "bbox query parameter is required");
+        assertMapBadRequest(request(BBOX), "zoom query parameter is required");
+        assertMapBadRequest(mapRequest(BBOX, "1.5"), "zoom must be an integer");
+        assertMapBadRequest(mapRequest(BBOX, "-1"), "zoom must be between");
+        assertMapBadRequest(mapRequest(BBOX, "23"), "zoom must be between");
+        assertMapBadRequest(mapRequest("170,45,-170,47", "9"),
+                "Antimeridian-crossing");
+        assertMapBadRequest(mapRequest(BBOX, "9")
+                .queryParam("technicalDifficulty", "S8"), "technicalDifficulty");
+        assertMapBadRequest(mapRequest(BBOX, "9")
+                .queryParam("distanceMinKm", "30")
+                .queryParam("distanceMaxKm", "20"), "distanceMinKm");
+    }
+
+    @Test
+    void coarsensGridInsteadOfSilentlyTruncatingAtFeatureCap() {
+        for (int index = 0; index < 5; index++) {
+            createPublishedTour(
+                    "Dense " + index,
+                    "SI",
+                    TechnicalDifficulty.S2,
+                    "20.00",
+                    1_000,
+                    14.0 + (index * 0.0002),
+                    46.0,
+                    BASE_PUBLICATION_TIME.minusMinutes(index)
+            );
+        }
+
+        Response response = mapRequest(BBOX, "22").get("/api/tours/map");
+
+        response.then()
+                .statusCode(200)
+                .body("metadata.mode", equalTo("CLUSTERS"))
+                .body("metadata.featureCap", equalTo(4))
+                .body("metadata.aggregationAttempt", greaterThan(0))
+                .body("features.size()", org.hamcrest.Matchers.lessThanOrEqualTo(4))
+                .body("features.properties.kind", everyItem(equalTo("cluster")));
+        int representedTours = response.jsonPath()
+                .getList("features.properties.count", Integer.class)
+                .stream()
+                .mapToInt(Integer::intValue)
+                .sum();
+        assertEquals(5, representedTours);
+    }
+
     private long createPublishedTour(
             String title,
             String countryCode,
@@ -418,14 +604,51 @@ class TourDiscoveryResourceTest {
         return given().queryParam("bbox", bbox);
     }
 
+    private static RequestSpecification mapRequest(String bbox, String zoom) {
+        return given().queryParam("bbox", bbox).queryParam("zoom", zoom);
+    }
+
+    private static RequestSpecification filteredRequest(RequestSpecification request) {
+        return request
+                .queryParam("countryCode", "si")
+                .queryParam("technicalDifficulty", "S2,S3")
+                .queryParam("distanceMinKm", "15")
+                .queryParam("distanceMaxKm", "45")
+                .queryParam("ascentMinMeters", "900")
+                .queryParam("ascentMaxMeters", "2100");
+    }
+
     private static List<Long> ids(Response response) {
         return response.jsonPath().getList("items.id", Number.class).stream()
                 .map(Number::longValue)
                 .toList();
     }
 
+    private static Set<Long> mapTourIds(Response response) {
+        return response.jsonPath().getList("features.properties.tourId", Number.class).stream()
+                .filter(java.util.Objects::nonNull)
+                .map(Number::longValue)
+                .collect(java.util.stream.Collectors.toSet());
+    }
+
+    private static List<String> clusterKeys(Response response) {
+        return response.jsonPath().getList("features.properties.clusterKey", String.class)
+                .stream()
+                .filter(java.util.Objects::nonNull)
+                .toList();
+    }
+
     private static void assertBadRequest(RequestSpecification request, String messageFragment) {
         Response response = request.get("/api/tours");
+        response.then().statusCode(400);
+        assertTrue(response.jsonPath().getString("message").contains(messageFragment));
+    }
+
+    private static void assertMapBadRequest(
+            RequestSpecification request,
+            String messageFragment
+    ) {
+        Response response = request.get("/api/tours/map");
         response.then().statusCode(400);
         assertTrue(response.jsonPath().getString("message").contains(messageFragment));
     }

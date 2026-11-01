@@ -24,7 +24,7 @@ The box is inclusive: a discovery point on its boundary is included. Values must
 longitudes must be between `-180` and `180`, latitudes between `-90` and `90`, south must be less
 than north, and west must be less than east.
 
-Phase 1 does not support antimeridian-crossing boxes. Frontends must clamp map bounds to the valid
+Discovery endpoints do not currently support antimeridian-crossing boxes. Frontends must clamp map bounds to the valid
 longitude/latitude ranges and must not send a wrapped box where west is greater than east.
 
 Optional filters:
@@ -107,14 +107,108 @@ Invalid query parameters and cursors return HTTP 400:
 The existing `GET /api/tours/{id}` endpoint remains the public detail endpoint and returns 404 for
 missing or unpublished tours.
 
-## Planned discovery endpoints
-
-Server-side map clustering and bounded simplified geometry are planned as separate endpoints. They
-are not implemented yet:
+### Discover tours for a map
 
 ```text
-GET /api/tours/map
+GET /api/tours/map?bbox=west,south,east,north&zoom=9
+```
+
+The endpoint returns a GeoJSON `FeatureCollection` containing bounded cluster or tour-point
+features. `bbox` and integer `zoom` are required. Zoom must be from `0` through `22`, inclusive.
+The geographic inclusion rule, inclusive bbox boundaries, antimeridian limitation and normalized
+filter values are identical to `GET /api/tours`.
+
+The following optional filters are supported:
+
+- `countryCode`
+- `technicalDifficulty` (comma-separated, for example `S2,S3`)
+- `distanceMinKm` and `distanceMaxKm`
+- `ascentMinMeters` and `ascentMaxMeters`
+
+Pagination parameters are not accepted because the complete map representation is bounded by
+adaptive aggregation instead.
+
+Example cluster response:
+
+```json
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "zoom": 9,
+    "mode": "CLUSTERS",
+    "cellSizeMeters": 22013.864,
+    "aggregationAttempt": 0,
+    "featureCount": 1,
+    "featureCap": 1000
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [14.05, 46.30]
+      },
+      "properties": {
+        "kind": "cluster",
+        "count": 12,
+        "clusterKey": "z9:a0:141:474",
+        "bounds": [13.98, 46.21, 14.12, 46.39]
+      }
+    }
+  ]
+}
+```
+
+The example values are illustrative. Cluster coordinates are the average of actual member points,
+so they remain inside the requested rectangular viewport. Cluster `bounds` describe the exact
+longitude/latitude extent of member discovery points, not the full grid cell. A single-member
+cluster therefore has equal west/east and south/north values.
+
+Tour features contain only lightweight marker data:
+
+```json
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Point",
+    "coordinates": [14.05, 46.30]
+  },
+  "properties": {
+    "kind": "tour",
+    "tourId": 123,
+    "title": "Published tour title",
+    "technicalDifficulty": "S3"
+  }
+}
+```
+
+#### Zoom and density policy
+
+- Zoom `0-9`: cluster features only, including cells containing one tour.
+- Zoom `10-11`: multi-tour cells are clusters; single-tour cells are tour features.
+- Zoom `12-22`: individual tours are returned when their number fits the feature cap. If not, the
+  endpoint falls back to cluster-only aggregation.
+
+The initial globally anchored Web Mercator grid targets approximately 72 screen pixels per cell.
+The production feature cap is 1,000. If a result exceeds the cap, the server doubles the cell size
+and reaggregates in PostgreSQL, for at most 12 deterministic attempts. Features are never silently
+truncated. A still-unrepresentable request returns HTTP 422 and asks the client to use a smaller
+viewport or more restrictive filters.
+
+`metadata.mode` is `CLUSTERS`, `MIXED` or `TOURS`. `cellSizeMeters` and `aggregationAttempt` expose
+the actual aggregation used. Cluster keys are stable for the same zoom, aggregation attempt,
+catalog state and filters; clients must treat them as opaque presentation identifiers.
+
+Invalid bbox, zoom or filters return HTTP 400 using the same minimal `{ "message": "..." }` body
+as list discovery. The response never contains route geometry, elevation profiles, GPX references
+or storage paths.
+
+## Planned discovery endpoints
+
+Bounded simplified route geometry remains planned and is not implemented yet:
+
+```text
 GET /api/tours/geometry
 ```
 
-They will reuse the same normalized filters and discovery-point geographic inclusion semantics.
+It will reuse the same normalized filters and discovery-point geographic inclusion semantics.

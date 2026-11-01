@@ -69,8 +69,9 @@ The approved MTB listing layout is the split-view interface in
 interactive MapLibre map.
 
 The backend provides `GET /api/tours` for geographically filtered, cursor-paginated published-tour
-summaries and `GET /api/tours/map` for bounded, zoom-dependent GeoJSON clusters and tour points.
-Both endpoints use the same normalized filter criteria and include a tour when its stored route
+summaries, `GET /api/tours/map` for bounded, zoom-dependent GeoJSON clusters and tour points, and
+`GET /api/tours/geometry` for clipped and simplified route segments at detailed zoom levels. All
+three endpoints use the same normalized filter criteria and include a tour when its stored route
 midpoint is inside the inclusive viewport.
 
 Map aggregation runs in PostgreSQL/PostGIS over a globally anchored Web Mercator grid. It uses the
@@ -78,9 +79,15 @@ partial published-tour spatial index for viewport prefiltering, aggregates count
 Tour entities or GPX geometry, and deterministically coarsens the grid when the response would
 exceed the feature cap. The endpoint and its clustering policy are documented in [API.md](API.md).
 
+Geometry discovery preserves that membership decision while using a padded viewport only for
+render clipping. PostgreSQL clips the EPSG:4326 route with its rectangular box operation,
+transforms the result to Web Mercator for zoom-derived metric simplification, enforces tour and
+vertex budgets, and serializes safe results to GeoJSON. Complete route geometries are not loaded
+into Java and stored source geometry is never modified.
+
 The frontend does not yet consume the collection endpoint and must never use the unauthenticated
-management API. Frontend marker integration, bounded geometry discovery, filters and list/map
-selection synchronization remain planned follow-up work.
+management API. Frontend marker and route integration, filters and list/map selection
+synchronization remain planned follow-up work.
 
 ---
 

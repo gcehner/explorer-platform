@@ -203,12 +203,78 @@ Invalid bbox, zoom or filters return HTTP 400 using the same minimal `{ "message
 as list discovery. The response never contains route geometry, elevation profiles, GPX references
 or storage paths.
 
-## Planned discovery endpoints
-
-Bounded simplified route geometry remains planned and is not implemented yet:
+### Discover route geometry for a map
 
 ```text
-GET /api/tours/geometry
+GET /api/tours/geometry?bbox=west,south,east,north&zoom=13
 ```
 
-It will reuse the same normalized filters and discovery-point geographic inclusion semantics.
+The endpoint returns published MTB route segments as a GeoJSON `FeatureCollection` for MapLibre
+visualization. It is available only at integer zoom levels `12-22`. `bbox` and `zoom` are required.
+The optional country, technical-difficulty, distance and ascent filters are identical to the list
+and map endpoints. Cursor pagination is not supported.
+
+Tour membership is determined only from the generated discovery point and the original inclusive
+requested bbox. A separately padded clipping box never adds tours. The clipping box expands the
+bbox width and height by 20% on every side, then clamps longitude to `[-180, 180]` and latitude to
+the Web Mercator range `[-85.05112878, 85.05112878]`. A selected tour with no non-empty,
+non-degenerate linear segment inside that clipping box is omitted from the features.
+
+Example response:
+
+```json
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "zoom": 13,
+    "simplificationToleranceMeters": 28.664,
+    "tourCount": 2,
+    "vertexCount": 1475
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [14.05, 46.30],
+          [14.06, 46.31]
+        ]
+      },
+      "properties": {
+        "tourId": 123
+      }
+    }
+  ]
+}
+```
+
+Both `LineString` and `MultiLineString` geometries are returned because viewport clipping can split
+a route into disconnected segments. Coordinates use `[longitude, latitude]` order.
+
+PostgreSQL clips the stored EPSG:4326 line with `ST_ClipByBox2D`, extracts linear components,
+transforms them to EPSG:3857, and applies `ST_SimplifyPreserveTopology`. The tolerance targets 1.5
+screen pixels:
+
+```text
+toleranceMeters = 1.5 * 40075016.68557849 / (256 * 2^zoom)
+```
+
+EPSG:3857 scale distortion increases at high latitudes. The result is intentionally suitable only
+for visual rendering; it must not be used for navigation, measurement or GPX export. Original
+stored geometry and GPX data are unchanged.
+
+The production limits are 50 selected tours and 50,000 returned vertices. The server checks at
+most 51 matching tours before doing spatial geometry processing. PostGIS calculates the simplified
+vertex budget before serializing GeoJSON. Tours and coordinates are never truncated or dropped to
+fit a successful response. Exceeding either limit returns:
+
+```json
+{
+  "code": "GEOMETRY_TOO_DENSE",
+  "message": "Too many route geometries for this viewport. Display clusters or zoom in."
+}
+```
+
+The status is HTTP 422, allowing clients to keep displaying cluster or point features. Missing or
+invalid bbox, zoom or filters return HTTP 400. Antimeridian-crossing boxes remain unsupported.

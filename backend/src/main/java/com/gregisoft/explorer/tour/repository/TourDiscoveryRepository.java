@@ -139,6 +139,110 @@ public class TourDiscoveryRepository {
         )).toList();
     }
 
+    public List<GeometryProjection> findPublishedTourGeometries(
+            TourDiscoveryCriteria criteria,
+            double clipWest,
+            double clipSouth,
+            double clipEast,
+            double clipNorth,
+            double simplificationToleranceMeters,
+            int maximumTours,
+            int maximumVertices
+    ) {
+        StringBuilder sql = eligibleToursSql("""
+                WITH selected_raw AS (
+                    SELECT tour.id, tour.route_geometry
+                    FROM tour
+                """);
+        appendCriteriaPredicates(sql, criteria);
+        sql.append("""
+                    LIMIT :tourLimit
+                ), selected AS (
+                    SELECT
+                        id,
+                        route_geometry,
+                        COUNT(*) OVER () AS selected_tour_count
+                    FROM selected_raw
+                ), clipped AS MATERIALIZED (
+                    SELECT
+                        id,
+                        selected_tour_count,
+                        ST_CollectionExtract(
+                            ST_ClipByBox2D(
+                                route_geometry,
+                                ST_MakeEnvelope(
+                                    CAST(:clipWest AS double precision),
+                                    CAST(:clipSouth AS double precision),
+                                    CAST(:clipEast AS double precision),
+                                    CAST(:clipNorth AS double precision),
+                                    4326
+                                )
+                            ),
+                            2
+                        ) AS clipped_geometry
+                    FROM selected
+                ), simplified AS MATERIALIZED (
+                    SELECT
+                        id,
+                        selected_tour_count,
+                        ST_SimplifyPreserveTopology(
+                            ST_Transform(clipped_geometry, 3857),
+                            CAST(:toleranceMeters AS double precision)
+                        ) AS render_geometry
+                    FROM clipped
+                    WHERE NOT ST_IsEmpty(clipped_geometry)
+                ), renderable AS (
+                    SELECT
+                        id,
+                        selected_tour_count,
+                        render_geometry,
+                        ST_NPoints(render_geometry) AS vertex_count
+                    FROM simplified
+                    WHERE NOT ST_IsEmpty(render_geometry)
+                      AND GeometryType(render_geometry) IN ('LINESTRING', 'MULTILINESTRING')
+                      AND ST_NPoints(render_geometry) >= 2
+                      AND ST_Length(render_geometry) > 0
+                ), budgeted AS (
+                    SELECT
+                        id,
+                        selected_tour_count,
+                        render_geometry,
+                        vertex_count,
+                        SUM(vertex_count) OVER () AS total_vertex_count
+                    FROM renderable
+                )
+                SELECT
+                    id,
+                    selected_tour_count,
+                    vertex_count,
+                    total_vertex_count,
+                    CASE
+                        WHEN total_vertex_count <= :maximumVertices
+                        THEN ST_AsGeoJSON(ST_Transform(render_geometry, 4326), 7, 0)
+                        ELSE NULL
+                    END
+                FROM budgeted
+                ORDER BY id
+                """);
+
+        Query query = entityManager.createNativeQuery(sql.toString());
+        bindCriteriaParameters(query, criteria);
+        query.setParameter("clipWest", clipWest);
+        query.setParameter("clipSouth", clipSouth);
+        query.setParameter("clipEast", clipEast);
+        query.setParameter("clipNorth", clipNorth);
+        query.setParameter("toleranceMeters", simplificationToleranceMeters);
+        query.setParameter("tourLimit", maximumTours + 1);
+        query.setParameter("maximumVertices", maximumVertices);
+        return rows(query).stream().map(row -> new GeometryProjection(
+                ((Number) row[0]).longValue(),
+                ((Number) row[1]).intValue(),
+                ((Number) row[2]).intValue(),
+                ((Number) row[3]).intValue(),
+                (String) row[4]
+        )).toList();
+    }
+
     public long countMapCellsUpTo(
             TourDiscoveryCriteria criteria,
             double cellSizeMeters,
@@ -404,6 +508,15 @@ public class TourDiscoveryRepository {
             long tourId,
             String title,
             TechnicalDifficulty technicalDifficulty
+    ) {
+    }
+
+    public record GeometryProjection(
+            long tourId,
+            int selectedTourCount,
+            int vertexCount,
+            int totalVertexCount,
+            String geoJson
     ) {
     }
 }

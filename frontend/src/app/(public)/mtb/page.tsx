@@ -1,28 +1,40 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+
+import { MtbDiscovery } from "@/components/mtb-discovery";
+import type { MtbTourSummary } from "@/lib/mtb-tour-listing";
+
+const DEFAULT_MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
 
 export const metadata: Metadata = {
   title: "MTB ture",
-  description: "MTB 'n' SKI zbirka objavljenih MTB tur.",
+  description: "Raziščite objavljene MTB ture na interaktivnem zemljevidu.",
 };
 
 export default function MtbPage() {
+  const mapStyleUrl =
+    process.env.NEXT_PUBLIC_MAP_STYLE_URL?.trim() || DEFAULT_MAP_STYLE_URL;
+  const tours: MtbTourSummary[] = [];
+
   return (
-    <main className="site-container flex min-h-[60vh] items-center py-16 sm:py-24">
-      <section className="surface-card w-full overflow-hidden">
-        <div className="h-2 bg-[var(--color-mtb)]" />
-        <div className="max-w-3xl p-8 sm:p-12">
-          <p className="text-sm font-black tracking-[0.12em] text-[var(--color-mtb)] uppercase">
-            MTB
-          </p>
-          <h1 className="mt-4 text-4xl leading-tight font-black tracking-[-0.035em] sm:text-6xl">
-            MTB ture
-          </h1>
-          <p className="mt-5 max-w-2xl text-lg leading-8 text-[var(--color-muted)]">
-            Javni seznam tur je v pripravi. Objavljene ture bodo tukaj prikazane
-            neposredno iz javnega API-ja.
-          </p>
-        </div>
-      </section>
+    <main>
+      <nav
+        className="flex min-h-11 items-center border-b border-[#eef1ed] bg-white px-5 text-xs text-[var(--color-muted)] sm:px-7"
+        aria-label="Navigacijska pot"
+      >
+        <Link
+          className="transition-colors hover:text-[var(--color-mtb-dark)] hover:underline"
+          href="/"
+        >
+          Domov
+        </Link>
+        <span className="px-2" aria-hidden="true">
+          /
+        </span>
+        <span aria-current="page">MTB</span>
+      </nav>
+
+      <MtbDiscovery tours={tours} mapStyleUrl={mapStyleUrl} />
     </main>
   );
 }

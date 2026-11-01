@@ -122,6 +122,17 @@ body {
   background: rgba(255, 255, 255, 0.9);
 }
 
+.mtb-map > .maplibregl-map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.mtb-map .maplibregl-canvas {
+  display: block;
+}
+
 .home-map-filterbar {
   position: absolute;
   right: 0;

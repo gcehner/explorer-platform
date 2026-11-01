@@ -62,6 +62,18 @@ It is responsible for:
 
 The frontend never contains business logic.
 
+### Public MTB discovery
+
+The approved MTB listing layout is the split-view interface in
+[`mockups/mtb.html`](mockups/mtb.html): a compact filter area and tour results beside an
+interactive MapLibre map.
+
+The first frontend phase intentionally displays an honest empty state because the backend currently
+provides only `GET /api/tours/{id}` for individual published tours. It must not scan tour IDs or use
+the unauthenticated management API. Tour cards, map markers, filtering, sorting, clustering, and
+list/map selection synchronization will be connected when a public `GET /api/tours` collection
+endpoint is available.
+
 ---
 
 ## CLI

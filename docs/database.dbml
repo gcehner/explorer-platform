@@ -73,6 +73,7 @@ Table tour {
   publication_status publication_status [not null, default: 'DRAFT']
   published_at timestamptz(6)
   route_geometry geometry [note: 'Actual PostgreSQL/PostGIS type: geometry(LineString, 4326). Nullable for incomplete DRAFT tours. CHECK requires a non-empty, valid geometry covered by the WGS84 longitude/latitude envelope.']
+  discovery_point geometry [note: 'Actual PostgreSQL/PostGIS type: geometry(Point, 4326). Stored generated column derived as ST_LineInterpolatePoint(route_geometry, 0.5); null when route_geometry is null.']
 
   Note: '''
   Optional text values must not be blank when present.
@@ -80,7 +81,8 @@ Table tour {
   Statistics are either all null or all present; distance/ascent/descent are non-negative and highest point is not below lowest point.
   Duration bounds are either both null or both present; values are positive 0.5-hour increments and maximum is not below minimum.
   DRAFT requires published_at to be null; PUBLISHED requires published_at to be non-null.
-  PostgreSQL also has GiST index idx_tour_route_geometry on route_geometry. DBML does not express the PostgreSQL USING GIST access method here.
+  PostgreSQL has GiST index idx_tour_route_geometry on route_geometry.
+  Published-tour discovery uses partial GiST index idx_tour_published_discovery_point on discovery_point and partial B-tree index idx_tour_published_order on (published_at DESC, id DESC). DBML does not express these PostgreSQL access methods and partial predicates here.
   '''
 }
 

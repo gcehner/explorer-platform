@@ -21,7 +21,9 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static com.gregisoft.explorer.test.TestDatabaseSafety.assertUsingIsolatedTestDatabase;
 
 @QuarkusTest
 class TourPersistenceTest {
@@ -35,6 +37,7 @@ class TourPersistenceTest {
     @Test
     @TestTransaction
     void lineStringAndOwnedImportDataRoundTrip() {
+        assertUsingIsolatedTestDatabase(entityManager);
         Tour tour = Tour.createDraft();
         tour.setStatistics(new TourStatistics(new BigDecimal("8.25"), 420, 415, 520, 910));
         tour.setElevationProfile(List.of(
@@ -63,7 +66,47 @@ class TourPersistenceTest {
 
     @Test
     @TestTransaction
+    void discoveryPointIsGeneratedAtRouteMidpointAndTracksRouteChanges() {
+        assertUsingIsolatedTestDatabase(entityManager);
+        Tour withRoute = Tour.createDraft();
+        withRoute.setRouteGeometry(new GeometryFactory(new PrecisionModel(), 4326)
+                .createLineString(new Coordinate[]{
+                        new Coordinate(13.0, 46.0),
+                        new Coordinate(15.0, 46.0)
+                }));
+        repository.persistAndFlush(withRoute);
+
+        Object[] generated = discoveryPoint(withRoute.getId());
+        assertEquals(14.0, ((Number) generated[0]).doubleValue(), 0.0000001);
+        assertEquals(46.0, ((Number) generated[1]).doubleValue(), 0.0000001);
+
+        entityManager.createNativeQuery("""
+                update tour
+                set route_geometry = ST_GeomFromText('LINESTRING(16 47, 18 47)', 4326)
+                where id = :id
+                """)
+                .setParameter("id", withRoute.getId())
+                .executeUpdate();
+        entityManager.flush();
+
+        Object[] updated = discoveryPoint(withRoute.getId());
+        assertEquals(17.0, ((Number) updated[0]).doubleValue(), 0.0000001);
+        assertEquals(47.0, ((Number) updated[1]).doubleValue(), 0.0000001);
+
+        Tour withoutRoute = Tour.createDraft();
+        repository.persistAndFlush(withoutRoute);
+        Object discoveryPoint = entityManager.createNativeQuery(
+                        "select discovery_point from tour where id = :id"
+                )
+                .setParameter("id", withoutRoute.getId())
+                .getSingleResult();
+        assertNull(discoveryPoint);
+    }
+
+    @Test
+    @TestTransaction
     void postgisSchemaObjectsAndOneTrackConstraintExist() {
+        assertUsingIsolatedTestDatabase(entityManager);
         Object extensionVersion = entityManager.createNativeQuery(
                 "select extversion from pg_extension where extname = 'postgis'"
         ).getSingleResult();
@@ -77,10 +120,40 @@ class TourPersistenceTest {
                         + "where conrelid = 'gpx_track'::regclass and contype = 'u' "
                         + "and pg_get_constraintdef(oid) = 'UNIQUE (tour_id)'"
         ).getSingleResult();
+        Number discoveryPointIndexCount = (Number) entityManager.createNativeQuery(
+                "select count(*) from pg_indexes "
+                        + "where tablename = 'tour' "
+                        + "and indexname = 'idx_tour_published_discovery_point' "
+                        + "and indexdef like '%USING gist%discovery_point%' "
+                        + "and indexdef like '%publication_status%PUBLISHED%'"
+        ).getSingleResult();
+        Number publishedOrderIndexCount = (Number) entityManager.createNativeQuery(
+                "select count(*) from pg_indexes "
+                        + "where tablename = 'tour' "
+                        + "and indexname = 'idx_tour_published_order' "
+                        + "and indexdef like '%published_at DESC, id DESC%' "
+                        + "and indexdef like '%publication_status%PUBLISHED%'"
+        ).getSingleResult();
+        String generatedColumn = (String) entityManager.createNativeQuery(
+                "select is_generated from information_schema.columns "
+                        + "where table_name = 'tour' and column_name = 'discovery_point'"
+        ).getSingleResult();
 
         assertNotNull(extensionVersion);
         assertTrue(spatialIndexCount.longValue() >= 1);
         assertEquals(1, oneTrackConstraintCount.longValue());
+        assertEquals(1, discoveryPointIndexCount.longValue());
+        assertEquals(1, publishedOrderIndexCount.longValue());
+        assertEquals("ALWAYS", generatedColumn);
+    }
+
+    private Object[] discoveryPoint(Long id) {
+        return (Object[]) entityManager.createNativeQuery(
+                        "select ST_X(discovery_point), ST_Y(discovery_point) "
+                                + "from tour where id = :id"
+                )
+                .setParameter("id", id)
+                .getSingleResult();
     }
 
     private static LineString lineString() {

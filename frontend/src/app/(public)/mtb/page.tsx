@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "MTB ture",
-  description: "Explorer zbirka objavljenih MTB tur.",
+  description: "MTB 'n' SKI zbirka objavljenih MTB tur.",
 };
 
 export default function MtbPage() {
@@ -19,7 +19,7 @@ export default function MtbPage() {
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-[var(--color-muted)]">
             Javni seznam tur je v pripravi. Objavljene ture bodo tukaj prikazane
-            neposredno iz javnega Explorer API-ja.
+            neposredno iz javnega API-ja.
           </p>
         </div>
       </section>

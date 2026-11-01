@@ -8,18 +8,24 @@ export function ExplorerBrand({ className = "" }: ExplorerBrandProps) {
   return (
     <Link
       href="/"
-      className={`inline-flex items-center gap-3 text-white ${className}`}
-      aria-label="Explorer – domov"
+      className={`inline-flex items-center gap-2.5 text-[var(--color-foreground)] ${className}`}
+      aria-label="MTB 'n' SKI – domov"
     >
-      <span className="explorer-brand-mark" aria-hidden="true" />
-      <span>
-        <strong className="block text-[19px] leading-5 tracking-[0.04em]">
-          EXPLORER
-        </strong>
-        <small className="block text-[10px] leading-4 tracking-[0.08em] text-[#a4c779]">
-          MTB &amp; SKI ADVENTURES
-        </small>
-      </span>
+      <svg
+        viewBox="0 0 36 28"
+        className="h-7 w-9 text-[var(--color-mtb-dark)]"
+        aria-hidden="true"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      >
+        <path d="M2 23.5 12.2 6.2l5.1 8.3 3.8-5.8L34 23.5H2Z" />
+      </svg>
+      <strong className="text-[17px] leading-none font-semibold tracking-[0.045em]">
+        {"MTB 'n' SKI"}
+      </strong>
     </Link>
   );
 }

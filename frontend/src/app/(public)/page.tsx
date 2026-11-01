@@ -1,17 +1,118 @@
+import Link from "next/link";
+
+import { HomeHeroImage } from "@/components/home-hero-image";
+import { HomeMap } from "@/components/home-map";
+
+const DEFAULT_MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
+
+const quickStatistics = [
+  { icon: "△", label: "Objavljenih tur" },
+  { icon: "⌁", label: "Skupna razdalja" },
+  { icon: "↗", label: "Skupaj vzpona" },
+  { icon: "◫", label: "Aktivno" },
+  { icon: "◎", label: "Držav" },
+] as const;
+
 export default function Home() {
+  const mapStyleUrl =
+    process.env.NEXT_PUBLIC_MAP_STYLE_URL?.trim() || DEFAULT_MAP_STYLE_URL;
+
   return (
-    <main className="flex min-h-[calc(100svh-var(--site-header-height))] items-center justify-center px-6 py-16">
-      <section className="w-full max-w-2xl rounded-2xl border border-stone-200 bg-white p-10 shadow-[0_18px_50px_rgba(20,30,23,0.08)]">
-        <p className="text-sm font-extrabold tracking-[0.16em] text-[#4d7e20] uppercase">
-          Explorer Platform
-        </p>
-        <h1 className="mt-4 text-4xl font-bold tracking-tight text-[#17201a]">
-          MTB ture, zapisane s terena.
-        </h1>
-        <p className="mt-5 max-w-xl text-lg leading-8 text-stone-600">
-          Javni del osebnega vodnika po MTB in turno smučarskih turah je v
-          pripravi.
-        </p>
+    <main>
+      <section className="home-hero-layout" aria-label="Uvod">
+        <HomeHeroImage />
+
+        <HomeMap styleUrl={mapStyleUrl} />
+      </section>
+
+      <section className="home-content">
+        <div className="home-quick-strip" aria-label="Hiter pregled zbirke">
+          {quickStatistics.map((statistic) => (
+            <div className="home-quick-item" key={statistic.label}>
+              <span className="home-quick-icon" aria-hidden="true">
+                {statistic.icon}
+              </span>
+              <span>
+                <strong aria-hidden="true">—</strong>
+                <span className="sr-only">
+                  Podatek trenutno ni na voljo.
+                </span>
+                <small>{statistic.label}</small>
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <div className="home-main-grid">
+          <section className="home-panel">
+            <div className="home-panel-head">
+              <h2>NOVE TURE</h2>
+              <Link href="/mtb">VSE TURE →</Link>
+            </div>
+
+            <div className="home-tour-list">
+              <div className="home-tour-empty">
+                <span className="home-tour-empty-icon" aria-hidden="true">
+                  △
+                </span>
+                <div>
+                  <h3>Objavljene ture bodo kmalu na voljo</h3>
+                  <p>
+                    Javni seznam tur še ni vzpostavljen. Ture bodo prikazane,
+                    ko bodo preverjene in objavljene.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <aside className="home-panel home-side">
+            <section className="home-side-section">
+              <h2>KATEGORIJE</h2>
+              <Link className="home-category-row" href="/mtb">
+                <span className="home-category-icon home-category-icon-mtb" aria-hidden="true">
+                  ◉
+                </span>
+                <span>MTB TURE</span>
+                <span className="home-row-arrow" aria-hidden="true">→</span>
+              </Link>
+              <Link className="home-category-row" href="/ski-touring">
+                <span className="home-category-icon home-category-icon-ski" aria-hidden="true">
+                  ✦
+                </span>
+                <span>TURNO SMUČANJE</span>
+                <span className="home-row-arrow" aria-hidden="true">→</span>
+              </Link>
+            </section>
+
+            <section className="home-side-section">
+              <h2>PRILJUBLJENA OBMOČJA</h2>
+              <p className="home-unavailable">
+                Podatki o priljubljenosti bodo na voljo skupaj z javnim
+                seznamom tur.
+              </p>
+            </section>
+
+            <section className="home-side-section">
+              <h2>RAZISKUJ</h2>
+              <Link className="home-popular-row" href="/mtb">
+                <span aria-hidden="true">↗</span>
+                <span>Vse MTB ture</span>
+                <span className="home-row-arrow" aria-hidden="true">→</span>
+              </Link>
+              <Link className="home-popular-row" href="/ski-touring">
+                <span aria-hidden="true">✦</span>
+                <span>Turno smučanje</span>
+                <span className="home-row-arrow" aria-hidden="true">→</span>
+              </Link>
+              <Link className="home-popular-row" href="/about">
+                <span aria-hidden="true">◎</span>
+                <span>{"O MTB 'n' SKI"}</span>
+                <span className="home-row-arrow" aria-hidden="true">→</span>
+              </Link>
+            </section>
+          </aside>
+        </div>
       </section>
     </main>
   );

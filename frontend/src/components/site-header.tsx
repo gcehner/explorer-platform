@@ -35,14 +35,14 @@ export function SiteHeader() {
 
   return (
     <header
-      className="sticky top-0 z-40 border-b border-white/10 bg-[var(--color-header)] text-white"
+      className="sticky top-0 z-40 border-b border-[#dfe4dc] bg-[#f8f9f6]/95 text-[var(--color-foreground)] backdrop-blur-sm"
       onKeyDown={handleKeyDown}
     >
-      <div className="site-container flex h-[var(--site-header-height)] items-center gap-8">
+      <div className="flex h-[var(--site-header-height)] w-full items-center justify-between gap-8 px-5">
         <ExplorerBrand />
 
         <nav
-          className="ml-auto hidden h-full items-center gap-8 md:flex"
+          className="hidden h-full items-center gap-8 md:flex"
           aria-label="Glavna navigacija"
         >
           {navigation.map((item) => {
@@ -53,10 +53,10 @@ export function SiteHeader() {
                 key={item.href}
                 href={item.href}
                 aria-current={active ? "page" : undefined}
-                className={`flex h-full items-center border-b-2 px-1 text-sm font-extrabold transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#8fbd53] ${
+                className={`rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-mtb-dark)] ${
                   active
-                    ? "border-[#8fbd53] text-[#8fbd53]"
-                    : "border-transparent text-[#e7ebe7] hover:text-[#8fbd53]"
+                    ? "bg-[#edf1e9] text-[var(--color-mtb-dark)]"
+                    : "text-[#3d473f] hover:bg-[#f0f2ee] hover:text-[var(--color-mtb-dark)]"
                 }`}
               >
                 {item.label}
@@ -68,7 +68,7 @@ export function SiteHeader() {
         <button
           ref={menuButtonRef}
           type="button"
-          className="ml-auto grid size-11 place-items-center rounded-lg border border-white/20 text-white transition hover:border-[#8fbd53] hover:text-[#8fbd53] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8fbd53] md:hidden"
+          className="grid size-10 place-items-center rounded-md border border-[#cbd2c8] text-[var(--color-foreground)] transition hover:border-[var(--color-mtb-dark)] hover:text-[var(--color-mtb-dark)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-mtb-dark)] md:hidden"
           aria-controls="mobile-primary-navigation"
           aria-expanded={menuOpen}
           onClick={() => setMenuOpen((open) => !open)}
@@ -104,10 +104,10 @@ export function SiteHeader() {
       {menuOpen ? (
         <nav
           id="mobile-primary-navigation"
-          className="border-t border-white/10 bg-[var(--color-header)] px-[4vw] pb-4 md:hidden"
+          className="border-t border-[#dfe4dc] bg-[#f8f9f6] pb-3 md:hidden"
           aria-label="Mobilna glavna navigacija"
         >
-          <div className="site-container grid py-2">
+          <div className="grid w-full px-5 py-2">
             {navigation.map((item) => {
               const active = isActive(pathname, item.href);
 
@@ -117,10 +117,10 @@ export function SiteHeader() {
                   href={item.href}
                   aria-current={active ? "page" : undefined}
                   onClick={() => setMenuOpen(false)}
-                  className={`rounded-lg border-l-2 px-4 py-3 text-sm font-extrabold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8fbd53] ${
+                  className={`rounded-md px-4 py-3 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-mtb-dark)] ${
                     active
-                      ? "border-[#8fbd53] bg-white/5 text-[#8fbd53]"
-                      : "border-transparent text-[#e7ebe7] hover:bg-white/5 hover:text-[#8fbd53]"
+                      ? "bg-[#edf1e9] text-[var(--color-mtb-dark)]"
+                      : "text-[#3d473f] hover:bg-[#f0f2ee] hover:text-[var(--color-mtb-dark)]"
                   }`}
                 >
                   {item.label}

@@ -4,8 +4,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Explorer Platform",
-    template: "%s · Explorer",
+    default: "MTB 'n' SKI",
+    template: "%s · MTB 'n' SKI",
   },
   description: "MTB ture in zgodbe s poti.",
 };

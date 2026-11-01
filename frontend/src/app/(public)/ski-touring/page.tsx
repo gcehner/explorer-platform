@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Turno smučanje",
-  description: "Explorer turno smučarske ture – vsebina je v pripravi.",
+  description: "MTB 'n' SKI turno smučarske ture – vsebina je v pripravi.",
 };
 
 export default function SkiTouringPage() {

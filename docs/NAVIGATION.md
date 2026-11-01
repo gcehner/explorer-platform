@@ -6,6 +6,15 @@ document defines which destinations and navigation patterns are approved.
 
 ## Approved Decisions
 
+### Public brand and internal project name
+
+- The approved public-facing brand name is **MTB 'n' SKI**.
+- Public navigation, page metadata, and visible brand references use MTB 'n' SKI.
+- The public wordmark uses a small, single-color mountain icon without a subtitle.
+- **Explorer Platform** remains the internal project, repository, backend, and architecture name.
+  Public branding does not rename packages, APIs, environment variables, or other internal
+  identifiers.
+
 ### Global navigation
 
 The public site has exactly four primary navigation destinations, in this order:
@@ -17,7 +26,7 @@ The public site has exactly four primary navigation destinations, in this order:
 | 3 | Turno smučanje | `/ski-touring` |
 | 4 | O meni | `/about` |
 
-The Explorer logo always links to `/`.
+The MTB 'n' SKI logo always links to `/`.
 
 No additional primary navigation items, dropdowns, or utility destinations should be introduced
 without an explicit architecture decision.
@@ -37,12 +46,15 @@ without an explicit architecture decision.
 
 All public pages use one consistent global header:
 
-- dark charcoal styling based on the existing mockups;
+- minimalist light editorial styling with an off-white `#f8f9f6` background, dark text, and a
+  subtle bottom border;
 - sticky positioning;
-- approximately 72 px desktop height;
-- Explorer twin-mountain branding linked to `/`;
+- approximately 64–68 px desktop height;
+- left-aligned, restrained MTB 'n' SKI branding with a small muted-green, single-color mountain
+  icon linked to `/` and no subtitle; the brand and right-aligned navigation share the same content
+  container;
 - the four approved primary navigation destinations;
-- a clear active-section indication;
+- medium-weight navigation text and a subtle dark-green `#315714` active-section indication;
 - parent-section highlighting for nested detail routes, so `/mtb/tours/[id]` keeps MTB active and
   `/ski-touring/tours/[id]` keeps Turno smučanje active;
 - responsive mobile navigation with a semantic menu button, correct expanded state, keyboard
@@ -66,6 +78,18 @@ Domov / Turno smučanje / Tour name
 
 Breadcrumbs must use semantic links for navigable ancestors. The current tour title is the final,
 non-linked item.
+
+### Homepage hero
+
+The public homepage hero uses the approved image-and-map composition:
+
+- one full-bleed local mountain or outdoor photograph on the left, rendered with `object-fit:
+  cover`;
+- no text, labels, buttons, metadata, gradient overlay, geometric background, or decorative
+  mountain layers over the photograph;
+- the real interactive MapLibre map remains unchanged on the right;
+- the existing 47%/53% desktop split and responsive stacked layout remain in place;
+- a single static image is used initially; slideshow behavior is deferred.
 
 ### No global footer
 
@@ -94,8 +118,8 @@ Explorer Platform has no global footer. This is an explicit and final design dec
 - Use a Next.js App Router route group and shared layout for public pages.
 - Use semantic links and accessible mobile interactions.
 - Keep the primary navigation limited to the four approved destinations.
-- Follow the branding, typography, colors, spacing, and widths established by the existing
-  mockups.
+- Follow the approved MTB 'n' SKI branding and light-header decision while retaining the content
+  typography, colors, spacing, and widths established by the existing mockups.
 - Keep navigation behavior consistent across desktop and mobile layouts.
 - Preserve the API-first boundary: the frontend reads data through backend APIs and does not own
   domain or publication rules.
@@ -108,19 +132,22 @@ currently available and which remain planned.
 ### Implemented
 
 - Public App Router route group and shared public layout.
-- Shared Explorer twin-mountain branding and sticky public header.
+- Shared MTB 'n' SKI mountain branding and minimalist light sticky public header.
 - Exactly four primary navigation links in the approved order.
 - Active-section highlighting, including nested-route matching.
 - Accessible responsive mobile menu with expanded state and Escape-key handling.
 - No global footer.
 - `/ski-touring` coming-soon page.
 - `/about` page with clearly marked biography and contact placeholders.
+- `/` homepage based on `docs/mockups/home.html`, with a real MapLibre basemap and truthful
+  unavailable-data states where no public collection API exists.
 - Development-only `/management/tours/[id]` outside the public route group and disabled in
   production.
 
 ### Partially implemented
 
-- `/` exists, but the complete homepage based on `docs/mockups/home.html` is not yet implemented.
+- The homepage image component and stable hero slot are implemented, but the repository does not
+  yet contain an approved local mountain photograph.
 - `/mtb` exists as a truthful holding page, but the tour listing, map, filters, and results are not
   yet implemented.
 - `/about` has its approved structure, but real biography and contact content is still required.

@@ -9,7 +9,6 @@
   --color-border: #dfe4dc;
   --color-mtb: #4d7e20;
   --color-mtb-dark: #315714;
-  --color-ski: #2f78bd;
   --color-header: #101513;
   --surface-shadow: 0 12px 30px rgba(20, 30, 23, 0.08);
   --surface-radius: 14px;
@@ -174,9 +173,6 @@ body {
   font-style: normal;
 }
 
-.home-map-filter-check-ski {
-  background: var(--color-ski);
-}
 
 .home-map-filter-status {
   margin-left: auto;
@@ -355,9 +351,6 @@ body {
   color: var(--color-mtb);
 }
 
-.home-category-icon-ski {
-  color: var(--color-ski);
-}
 
 .home-row-arrow {
   margin-left: auto;

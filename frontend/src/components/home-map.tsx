@@ -123,15 +123,6 @@ export function HomeMap({ styleUrl }: HomeMapProps) {
           <span className="home-map-filter-check" aria-hidden="true">✓</span>
           MTB
         </button>
-        <button
-          className="home-map-filter"
-          type="button"
-          disabled
-          aria-describedby="home-map-filter-status"
-        >
-          <span className="home-map-filter-check home-map-filter-check-ski" aria-hidden="true">✓</span>
-          TURNO SMUČANJE
-        </button>
         <span className="home-map-filter-status" id="home-map-filter-status">
           Filtri bodo na voljo z javnim seznamom tur.
         </span>

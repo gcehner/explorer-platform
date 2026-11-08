@@ -8,8 +8,7 @@ import { ExplorerBrand } from "@/components/explorer-brand";
 
 const navigation = [
   { href: "/", label: "Domov" },
-  { href: "/mtb", label: "MTB" },
-  { href: "/ski-touring", label: "Turno smučanje" },
+  { href: "/mtb", label: "MTB ture" },
   { href: "/about", label: "O meni" },
 ] as const;
 

@@ -76,13 +76,6 @@ export default function Home() {
                 <span>MTB TURE</span>
                 <span className="home-row-arrow" aria-hidden="true">→</span>
               </Link>
-              <Link className="home-category-row" href="/ski-touring">
-                <span className="home-category-icon home-category-icon-ski" aria-hidden="true">
-                  ✦
-                </span>
-                <span>TURNO SMUČANJE</span>
-                <span className="home-row-arrow" aria-hidden="true">→</span>
-              </Link>
             </section>
 
             <section className="home-side-section">
@@ -100,14 +93,9 @@ export default function Home() {
                 <span>Vse MTB ture</span>
                 <span className="home-row-arrow" aria-hidden="true">→</span>
               </Link>
-              <Link className="home-popular-row" href="/ski-touring">
-                <span aria-hidden="true">✦</span>
-                <span>Turno smučanje</span>
-                <span className="home-row-arrow" aria-hidden="true">→</span>
-              </Link>
               <Link className="home-popular-row" href="/about">
                 <span aria-hidden="true">◎</span>
-                <span>{"O MTB 'n' SKI"}</span>
+                <span>O projektu MTB</span>
                 <span className="home-row-arrow" aria-hidden="true">→</span>
               </Link>
             </section>

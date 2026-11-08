@@ -4,10 +4,10 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "MTB 'n' SKI",
-    template: "%s · MTB 'n' SKI",
+    default: "MTB",
+    template: "%s · MTB",
   },
-  description: "MTB ture in zgodbe s poti.",
+  description: "Kurirana zbirka MTB tur, GPX sledi in tehničnih informacij.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

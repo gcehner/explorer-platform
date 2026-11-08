@@ -44,7 +44,6 @@
 
 * [ ] Display all published tours on a map
 * [ ] Display route geometry
-* [ ] Filter by sport type
 * [ ] Filter by region
 * [ ] Filter by difficulty
 * [ ] Add text search
@@ -63,5 +62,5 @@
 * [ ] Multiple users
 * [ ] Authentication and authorization
 * [ ] Private tours
-* [ ] Additional activity providers
+* [ ] Additional import providers
 * [ ] Mobile application

@@ -1,6 +1,6 @@
 # Explorer Platform
 
-Explorer Platform is a personal outdoor platform for documenting, organizing and sharing MTB and ski touring adventures.
+Explorer Platform is a personal MTB platform for documenting, organizing and sharing curated mountain-bike tours.
 
 The project is built around:
 

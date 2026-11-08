@@ -8,7 +8,7 @@ Owner of tours.
 
 ## Tour
 
-Published outdoor route.
+Published MTB route.
 
 ---
 

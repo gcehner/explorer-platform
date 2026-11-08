@@ -214,7 +214,7 @@ export default async function TourPreviewPage(
             <span>
               <strong className="block text-lg tracking-[0.08em]">EXPLORER</strong>
               <small className="text-[10px] tracking-[0.12em] text-[#9fc177]">
-                MTB &amp; TURNO SMUČANJE
+                MTB TURE
               </small>
             </span>
           </div>

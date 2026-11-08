@@ -1,11 +1,8 @@
 # Vision
 
-Explorer Platform is a personal outdoor platform for documenting and publishing technical descriptions of mountain adventures.
+Explorer Platform is a personal MTB platform for documenting and publishing technical descriptions of mountain-bike tours.
 
-It is focused on:
-
-* MTB rides
-* ski touring
+It is focused on curated MTB rides.
 
 Each tour combines structured information with maps, GPX tracks, elevation profiles and photography.
 

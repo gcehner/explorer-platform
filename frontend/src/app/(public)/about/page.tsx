@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "O meni",
-  description: "O avtorju projekta MTB 'n' SKI.",
+  description: "O avtorju in namenu projekta MTB.",
 };
 
 function Placeholder({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -21,14 +21,14 @@ export default function AboutPage() {
     <main className="site-container py-16 sm:py-24">
       <div className="max-w-3xl">
         <p className="text-sm font-black tracking-[0.12em] text-[var(--color-mtb)] uppercase">
-          {"MTB 'n' SKI"}
+          MTB
         </p>
         <h1 className="mt-4 text-4xl leading-tight font-black tracking-[-0.035em] sm:text-6xl">
           O meni
         </h1>
         <p className="mt-5 text-lg leading-8 text-[var(--color-muted)]">
-          {"Ta stran bo predstavila avtorja osebnega vodnika MTB 'n' SKI in način,"}
-          kako nastajajo ture.
+          Ta stran bo predstavila avtorja osebnega MTB vodnika in način, kako
+          nastajajo ture.
         </p>
       </div>
 

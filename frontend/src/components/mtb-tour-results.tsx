@@ -6,12 +6,22 @@ import type {
 
 interface MtbTourResultsProps {
   tours: MtbTourSummary[];
-  status?: TourListingStatus;
+  status: TourListingStatus;
+  hasMore: boolean;
+  loadingMore: boolean;
+  loadMoreError: boolean;
+  onRetry: () => void;
+  onLoadMore: () => void;
 }
 
 export function MtbTourResults({
   tours,
-  status = "ready",
+  status,
+  hasMore,
+  loadingMore,
+  loadMoreError,
+  onRetry,
+  onLoadMore,
 }: MtbTourResultsProps) {
   return (
     <section
@@ -19,19 +29,22 @@ export function MtbTourResults({
       aria-label="Seznam MTB tur"
     >
       <div className="flex items-center justify-between gap-3 px-4 pt-4 pb-3 sm:px-5">
-        <strong className="text-sm">
-          Seznam tur
-          <span className="ml-1 font-medium text-[#839084]">· {tours.length}</span>
-        </strong>
+        <strong className="text-sm">Seznam tur</strong>
         <select
           className="cursor-not-allowed rounded-lg border border-[var(--color-border)] bg-white px-2.5 py-2 text-xs text-[#687168] opacity-65"
           aria-label="Razvrsti ture"
           disabled
-          title="Razvrščanje bo na voljo z javnim katalogom tur."
+          title="Javni API trenutno uporablja vrstni red po datumu objave."
         >
-          <option>Priporočeno</option>
+          <option>Najnovejše</option>
         </select>
       </div>
+
+      {status === "waiting-for-map" ? (
+        <div className="px-6 py-12 text-center text-sm leading-6 text-[var(--color-muted)]" aria-live="polite">
+          Pripravljam območje zemljevida …
+        </div>
+      ) : null}
 
       {status === "loading" ? (
         <div className="grid gap-3 px-4 pb-6" aria-live="polite" aria-busy="true">
@@ -45,12 +58,24 @@ export function MtbTourResults({
         </div>
       ) : null}
 
+      {status === "invalid-bounds" ? (
+        <div className="mx-4 rounded-xl border border-[#d8d5bd] bg-[#fffdf3] p-5 text-sm leading-6 text-[#665f2f]" role="status">
+          Vidnega območja zemljevida ni mogoče uporabiti za iskanje tur. Zemljevid
+          premaknite v običajno območje brez prehoda čez datumsko mejo in stran
+          znova naložite.
+        </div>
+      ) : null}
+
       {status === "error" ? (
-        <div
-          className="mx-4 rounded-xl border border-[#dfc8c0] bg-[#fff9f7] p-5 text-sm leading-6 text-[#7d3f2d]"
-          role="alert"
-        >
-          Seznama tur trenutno ni mogoče naložiti. Poskusite znova pozneje.
+        <div className="mx-4 rounded-xl border border-[#dfc8c0] bg-[#fff9f7] p-5 text-sm leading-6 text-[#7d3f2d]" role="alert">
+          <p>Seznama tur trenutno ni mogoče naložiti.</p>
+          <button
+            type="button"
+            className="mt-3 rounded-lg border border-[#c89f91] bg-white px-3 py-2 font-semibold hover:border-[#9e6b5a]"
+            onClick={onRetry}
+          >
+            Poskusi znova
+          </button>
         </div>
       ) : null}
 
@@ -59,6 +84,31 @@ export function MtbTourResults({
           {tours.map((tour) => (
             <MtbTourResultCard key={tour.id} tour={tour} />
           ))}
+
+          {loadMoreError ? (
+            <div className="rounded-xl border border-[#dfc8c0] bg-[#fff9f7] p-4 text-center text-sm text-[#7d3f2d]" role="alert">
+              <p>Dodatnih tur ni bilo mogoče naložiti.</p>
+              <button
+                type="button"
+                className="mt-2 rounded-lg border border-[#c89f91] bg-white px-3 py-2 font-semibold"
+                onClick={onLoadMore}
+              >
+                Poskusi znova
+              </button>
+            </div>
+          ) : null}
+
+          {hasMore && !loadMoreError ? (
+            <button
+              type="button"
+              className="mx-auto mt-2 min-w-32 rounded-lg border border-[#9cb98b] bg-white px-4 py-2.5 text-sm font-semibold text-[var(--color-mtb-dark)] transition-colors hover:bg-[var(--color-surface-soft)] disabled:cursor-wait disabled:opacity-60"
+              disabled={loadingMore}
+              aria-busy={loadingMore}
+              onClick={onLoadMore}
+            >
+              {loadingMore ? "Nalagam …" : "Naloži več"}
+            </button>
+          ) : null}
         </div>
       ) : null}
 
@@ -72,11 +122,10 @@ export function MtbTourResults({
               △
             </span>
             <h2 className="mt-4 text-lg font-bold tracking-[-0.02em]">
-              Javni katalog tur še ni na voljo
+              Za izbrano območje ni tur
             </h2>
             <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
-              Objavljene MTB ture bodo prikazane tukaj, ko bo vzpostavljen
-              javni seznam tur.
+              Nobena objavljena MTB tura ne ustreza trenutnemu območju in filtrom.
             </p>
           </div>
         </div>

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { MtbDiscovery } from "@/components/mtb-discovery";
-import type { MtbTourSummary } from "@/lib/mtb-tour-listing";
 
 const DEFAULT_MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
 
@@ -14,7 +13,6 @@ export const metadata: Metadata = {
 export default function MtbPage() {
   const mapStyleUrl =
     process.env.NEXT_PUBLIC_MAP_STYLE_URL?.trim() || DEFAULT_MAP_STYLE_URL;
-  const tours: MtbTourSummary[] = [];
 
   return (
     <main>
@@ -34,7 +32,7 @@ export default function MtbPage() {
         <span aria-current="page">MTB</span>
       </nav>
 
-      <MtbDiscovery tours={tours} mapStyleUrl={mapStyleUrl} />
+      <MtbDiscovery mapStyleUrl={mapStyleUrl} />
     </main>
   );
 }

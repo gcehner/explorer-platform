@@ -18,6 +18,29 @@ The preview is deliberately disabled when `NODE_ENV=production`. The management 
 
 The backend URL uses the server-only `EXPLORER_BACKEND_URL` variable. Do not rename it with a `NEXT_PUBLIC_` prefix.
 
+## Public MTB discovery
+
+The public `/mtb` page loads published tour summaries through the narrow same-origin
+`GET /api/tours` route handler. The handler forwards only the documented public-list query
+parameters to Quarkus; it does not proxy `/api/management`.
+
+The first valid bounds reported by the MapLibre map are serialized as
+`west,south,east,north` and remain the fixed geographic scope for list requests during Phase 4A.
+Changing the map viewport does not refresh the list yet. Country, technical difficulty, distance
+and ascent filters use the corresponding backend parameters. Results use the backend's opaque
+cursor and a page size of 24.
+
+Current limitations:
+
+- area or mountain-range filtering is not supported by the public API and remains disabled;
+- cards are not links until the public `/mtb/[id]` detail route exists;
+- map clusters, route geometry and viewport-driven refresh remain Phase 4B work.
+
+The homepage `NOVE TURE` section separately requests
+`GET /api/tours/latest?limit=6`. These results cover the entire published catalog and never depend
+on the homepage map viewport. Homepage statistics remain intentionally unavailable because the
+latest six tours are not global aggregates.
+
 ## Start on Windows CMD
 
 From the repository root:
@@ -55,6 +78,7 @@ Review the provider's current usage terms before deployment: https://openfreemap
 
 ```cmd
 npm run lint
+npm test
 npm run typecheck
 npm run build
 ```

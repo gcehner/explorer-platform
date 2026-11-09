@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { HomeHeroImage } from "@/components/home-hero-image";
+import { HomeLatestTours } from "@/components/home-latest-tours";
 import { HomeMap } from "@/components/home-map";
 
 const DEFAULT_MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
@@ -51,18 +52,7 @@ export default function Home() {
             </div>
 
             <div className="home-tour-list">
-              <div className="home-tour-empty">
-                <span className="home-tour-empty-icon" aria-hidden="true">
-                  △
-                </span>
-                <div>
-                  <h3>Objavljene ture bodo kmalu na voljo</h3>
-                  <p>
-                    Javni seznam tur še ni vzpostavljen. Ture bodo prikazane,
-                    ko bodo preverjene in objavljene.
-                  </p>
-                </div>
-              </div>
+              <HomeLatestTours />
             </div>
           </section>
 

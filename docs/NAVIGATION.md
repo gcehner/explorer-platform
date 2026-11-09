@@ -31,7 +31,7 @@ add dropdowns or unrelated utility links without a new architecture decision.
 | Route | Purpose | Status |
 | --- | --- | --- |
 | `/` | MTB homepage based on `docs/mockups/home.html` | Implemented |
-| `/mtb` | MTB discovery, list, filters, and map based on `docs/mockups/mtb.html` | Visual shell implemented; API integration planned |
+| `/mtb` | MTB discovery, list, filters, and map based on `docs/mockups/mtb.html` | Phase 4A public API integration implemented |
 | `/mtb/[id]` | Public published MTB tour detail based on `docs/mockups/tour-detail.html` | Planned |
 | `/about` | Project/author introduction and contact | Implemented with content placeholders |
 
@@ -69,7 +69,7 @@ The homepage preserves the approved image-and-map composition:
 - full-bleed local MTB/outdoor image slot on the left;
 - real interactive MapLibre map on the right;
 - existing 47%/53% desktop split and responsive stacked layout;
-- truthful empty states where public data is not yet connected;
+- the six latest published tours are loaded globally and independently of the map viewport;
 - primary exploration links lead to `/mtb`;
 - no fabricated tours, map markers, or statistics.
 
@@ -100,14 +100,14 @@ must use public APIs and never link to or depend on a management tour ID.
 - Active-section highlighting and accessible mobile menu.
 - No global footer.
 - Homepage visual shell with MapLibre and truthful unavailable-data states.
-- `/mtb` discovery visual shell with filters, empty results, and MapLibre.
+- Homepage `NOVE TURE` integration with the global latest-published endpoint.
+- `/mtb` geographic discovery with supported filters, cursor pagination, empty states, and MapLibre.
 - `/about` structure with biography and contact placeholders.
 - Development-only `/management/tours/[id]` preview.
 - Backend public list, map-cluster, geometry-discovery, and tour-detail APIs.
 
 ### Planned
 
-- Connect `/mtb` to the existing public discovery APIs.
 - Implement `/mtb/[id]` using the public published-tour detail API.
 - Add public detail breadcrumbs and listing-return navigation.
 - Replace content placeholders with approved biography, contact, and local imagery.

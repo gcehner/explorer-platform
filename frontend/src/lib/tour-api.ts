@@ -14,7 +14,7 @@ export class TourApiError extends Error {
   }
 }
 
-function backendUrl(): string {
+export function getBackendBaseUrl(): string {
   const configuredUrl = process.env.EXPLORER_BACKEND_URL ?? DEFAULT_BACKEND_URL;
 
   try {
@@ -32,7 +32,7 @@ export async function getManagementTour(id: number): Promise<TourDetail> {
   let response: Response;
 
   try {
-    response = await fetch(`${backendUrl()}/api/management/tours/${id}`, {
+    response = await fetch(`${getBackendBaseUrl()}/api/management/tours/${id}`, {
       cache: "no-store",
       headers: { Accept: "application/json" },
     });

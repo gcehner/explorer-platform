@@ -82,6 +82,12 @@ public class PublicTourResource {
     }
 
     @GET
+    @Path("/latest")
+    public TourLatestResponse getLatestTours(@QueryParam("limit") String limit) {
+        return discoveryService.findLatestTours(limit);
+    }
+
+    @GET
     public TourPageResponse getTours(
             @QueryParam("bbox") String bbox,
             @QueryParam("countryCode") String countryCode,

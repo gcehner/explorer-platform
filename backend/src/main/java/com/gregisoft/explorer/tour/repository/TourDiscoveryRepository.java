@@ -101,6 +101,37 @@ public class TourDiscoveryRepository {
         return rows(query).stream().map(TourDiscoveryRepository::toResponse).toList();
     }
 
+    public List<TourSummaryResponse> findLatestPublishedTours(int limit) {
+        String sql = """
+                SELECT
+                    tour.id,
+                    tour.title,
+                    tour.mountain_range,
+                    tour.country_code,
+                    tour.short_description,
+                    tour.start_location_name,
+                    tour.start_latitude,
+                    tour.start_longitude,
+                    tour.distance_km,
+                    tour.total_ascent_m,
+                    tour.duration_min_hours,
+                    tour.duration_max_hours,
+                    tour.technical_difficulty,
+                    tour.physical_difficulty,
+                    tour.exposure_rating,
+                    tour.carrying_percentage,
+                    tour.route_type,
+                    tour.published_at
+                FROM tour
+                WHERE tour.publication_status = 'PUBLISHED'
+                ORDER BY tour.published_at DESC, tour.id DESC
+                """;
+
+        Query query = entityManager.createNativeQuery(sql);
+        query.setMaxResults(limit);
+        return rows(query).stream().map(TourDiscoveryRepository::toResponse).toList();
+    }
+
     public long countPublishedTourPointsUpTo(
             TourDiscoveryCriteria criteria,
             int maximumCount

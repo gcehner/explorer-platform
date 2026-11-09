@@ -85,9 +85,20 @@ transforms the result to Web Mercator for zoom-derived metric simplification, en
 vertex budgets, and serializes safe results to GeoJSON. Complete route geometries are not loaded
 into Java and stored source geometry is never modified.
 
-The frontend does not yet consume the collection endpoint and must never use the unauthenticated
-management API. Frontend marker and route integration, filters and list/map selection
-synchronization remain planned follow-up work.
+The `/mtb` frontend consumes the collection endpoint through a narrow same-origin Next.js route
+handler that forwards only public list parameters. The Quarkus address remains server-only. Its
+initial geographic scope comes from the first valid MapLibre viewport and remains fixed while
+filters and opaque-cursor pages are requested in Phase 4A. Country, technical-difficulty, distance
+and ascent filters are supported; unavailable area filters are explicitly disabled.
+
+Map clusters, route geometry, viewport-driven refresh and list/map selection synchronization remain
+planned Phase 4B follow-up work. The frontend must never use or proxy the unauthenticated management
+API for public pages.
+
+The homepage's `NOVE TURE` section independently consumes `GET /api/tours/latest?limit=6`
+through its own narrow same-origin handler. It shows the newest published summaries across the
+entire catalog and never derives its contents from the homepage map viewport or the six returned
+tours into global statistics.
 
 ---
 

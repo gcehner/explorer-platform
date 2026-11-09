@@ -3,13 +3,23 @@
 import { useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 
+import {
+  normalizeMapBounds,
+  type MtbBoundingBox,
+} from "@/lib/mtb-tour-listing";
+
 maplibregl.setWorkerUrl(
   new URL("maplibre-gl/dist/maplibre-gl-worker.mjs", import.meta.url).toString(),
 );
 
 type MapStatus = "loading" | "ready" | "error";
 
-export function MtbMap({ styleUrl }: { styleUrl: string }) {
+interface MtbMapProps {
+  styleUrl: string;
+  onInitialBounds: (bounds: MtbBoundingBox | null) => void;
+}
+
+export function MtbMap({ styleUrl, onInitialBounds }: MtbMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<MapStatus>("loading");
 
@@ -21,6 +31,7 @@ export function MtbMap({ styleUrl }: { styleUrl: string }) {
     }
 
     let active = true;
+    let boundsReported = false;
     let map: maplibregl.Map | undefined;
     let resizeFrame: number | undefined;
     const resizeObserver = new ResizeObserver(() => {
@@ -30,6 +41,13 @@ export function MtbMap({ styleUrl }: { styleUrl: string }) {
 
       resizeFrame = requestAnimationFrame(() => map?.resize());
     });
+
+    const reportBounds = (bounds: MtbBoundingBox | null) => {
+      if (!boundsReported && active) {
+        boundsReported = true;
+        onInitialBounds(bounds);
+      }
+    };
 
     try {
       map = new maplibregl.Map({
@@ -48,12 +66,24 @@ export function MtbMap({ styleUrl }: { styleUrl: string }) {
         if (active) {
           map?.resize();
           setStatus("ready");
+          const visibleBounds = map?.getBounds();
+          reportBounds(
+            visibleBounds
+              ? normalizeMapBounds({
+                  west: visibleBounds.getWest(),
+                  south: visibleBounds.getSouth(),
+                  east: visibleBounds.getEast(),
+                  north: visibleBounds.getNorth(),
+                })
+              : null,
+          );
         }
       });
       map.on("error", (event) => {
         console.error("MTB listing map error", event.error);
         if (active && !map?.isStyleLoaded()) {
           setStatus("error");
+          reportBounds(null);
         }
       });
 
@@ -63,6 +93,7 @@ export function MtbMap({ styleUrl }: { styleUrl: string }) {
       queueMicrotask(() => {
         if (active) {
           setStatus("error");
+          reportBounds(null);
         }
       });
     }
@@ -75,7 +106,7 @@ export function MtbMap({ styleUrl }: { styleUrl: string }) {
       }
       map?.remove();
     };
-  }, [styleUrl]);
+  }, [onInitialBounds, styleUrl]);
 
   return (
     <section

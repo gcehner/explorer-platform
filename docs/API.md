@@ -2,6 +2,28 @@
 
 ## MTB tour discovery
 
+### List latest published tours
+
+```text
+GET /api/tours/latest?limit=6
+```
+
+Returns the newest published MTB tours across the entire catalog. This endpoint is independent of
+map bounds and discovery filters. Results use the existing lightweight public tour summary DTO and
+are ordered deterministically by `publishedAt DESC, id DESC`.
+
+`limit` is optional, defaults to 6, and must be an integer from 1 through 12. The response is not
+cursor-paginated:
+
+```json
+{
+  "items": []
+}
+```
+
+Drafts are excluded. Invalid limits return HTTP 400 using the standard
+`{ "message": "..." }` error body.
+
 ### List published tours
 
 ```text

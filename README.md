@@ -49,6 +49,11 @@ java -jar target/explorer.jar tour import path/to/track.gpx
 Use `--backend-url` to select another backend. If the option is omitted, the CLI uses
 `EXPLORER_BACKEND_URL`, then falls back to `http://localhost:8080`.
 
+## Garmin Personal API configuration
+
+The CLI can securely configure and validate a Garmin Connect Personal API key. See
+[docs/GARMIN_CLI.md](docs/GARMIN_CLI.md) for the Windows PowerShell workflow and security details.
+
 ## Testing
 
 Backend integration tests require the isolated `explorer_test` PostGIS database. See

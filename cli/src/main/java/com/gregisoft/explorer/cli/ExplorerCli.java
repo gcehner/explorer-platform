@@ -1,6 +1,7 @@
 package com.gregisoft.explorer.cli;
 
 import com.gregisoft.explorer.cli.command.TourCommand;
+import com.gregisoft.explorer.cli.command.GarminCommand;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -9,7 +10,7 @@ import picocli.CommandLine.Command;
         name = "explorer",
         description = "Explorer Platform command-line tools.",
         mixinStandardHelpOptions = true,
-        subcommands = TourCommand.class
+        subcommands = {TourCommand.class, GarminCommand.class}
 )
 public class ExplorerCli implements Runnable {
 

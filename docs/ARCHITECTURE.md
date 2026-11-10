@@ -125,6 +125,10 @@ The CLI communicates only through the backend REST API.
 
 It never accesses the database directly.
 
+Garmin Personal API key configuration and authentication are described in
+[`GARMIN_CLI.md`](GARMIN_CLI.md). Garmin credentials remain local to the CLI and are never sent to
+the Explorer backend.
+
 ---
 
 ## Storage

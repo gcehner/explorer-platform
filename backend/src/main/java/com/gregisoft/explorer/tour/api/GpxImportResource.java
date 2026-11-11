@@ -1,11 +1,14 @@
 package com.gregisoft.explorer.tour.api;
 
 import com.gregisoft.explorer.tour.service.GpxImportService;
+import com.gregisoft.explorer.tour.service.GpxImportResult;
 
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -41,11 +44,24 @@ public class GpxImportResource {
             throw new BadRequestException("The GPX file must not be empty.");
         }
 
-        GpxImportResponse response = service.importGpx(
+        GpxImportResult result = service.importGpx(
                 metadata,
                 gpxFile.uploadedFile(),
                 gpxFile.fileName()
         );
-        return Response.status(Response.Status.CREATED).entity(response).build();
+        return Response.status(result.created() ? Response.Status.CREATED : Response.Status.OK)
+                .entity(result.response())
+                .build();
+    }
+
+    @GET
+    @Path("/sources/{provider}/{activityId}")
+    public Response findBySource(
+            @PathParam("provider") String provider,
+            @PathParam("activityId") String activityId
+    ) {
+        return service.findBySource(provider, activityId)
+                .map(response -> Response.ok(response).build())
+                .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
     }
 }

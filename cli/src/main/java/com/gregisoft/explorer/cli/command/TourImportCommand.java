@@ -1,12 +1,9 @@
 package com.gregisoft.explorer.cli.command;
 
 import com.gregisoft.explorer.cli.gpx.GpxProcessingException;
-import com.gregisoft.explorer.cli.gpx.GpxProcessor;
-import com.gregisoft.explorer.cli.gpx.GpxTrackReader;
-import com.gregisoft.explorer.cli.gpx.NormalizedGpxData;
 import com.gregisoft.explorer.cli.http.BackendClientException;
-import com.gregisoft.explorer.cli.http.ExplorerBackendClient;
-import com.gregisoft.explorer.cli.http.GpxImportResponse;
+import com.gregisoft.explorer.cli.http.GpxImportOutcome;
+import com.gregisoft.explorer.cli.importing.TourImportWorkflow;
 
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -43,11 +40,11 @@ public class TourImportCommand implements Callable<Integer> {
         try {
             validateGpxFile(gpxFile);
             URI resolvedBackendUrl = resolveBackendUrl(backendUrl, System.getenv("EXPLORER_BACKEND_URL"));
-            NormalizedGpxData normalized = new GpxProcessor().process(new GpxTrackReader().read(gpxFile));
-            GpxImportResponse response = new ExplorerBackendClient().importGpx(
-                    resolvedBackendUrl, gpxFile, normalized);
+            GpxImportOutcome outcome = new TourImportWorkflow().importGpx(
+                    resolvedBackendUrl, gpxFile, null, null);
             spec.commandLine().getOut().printf(
-                    "Created tour %d with status %s.%n", response.tourId(), response.status());
+                    "Created tour %d with status %s.%n",
+                    outcome.response().tourId(), outcome.response().status());
             return 0;
         } catch (GpxProcessingException | BackendClientException | IllegalArgumentException exception) {
             spec.commandLine().getErr().println("GPX import failed: " + exception.getMessage());

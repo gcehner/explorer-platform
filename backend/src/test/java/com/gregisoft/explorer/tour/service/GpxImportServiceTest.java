@@ -8,6 +8,7 @@ import com.gregisoft.explorer.tour.repository.TourRepository;
 import com.gregisoft.explorer.tour.storage.GpxSourceStorage;
 import com.gregisoft.explorer.tour.storage.GpxSourceStorageException;
 import com.gregisoft.explorer.tour.type.PublicationStatus;
+import com.gregisoft.explorer.tour.type.ImportSourceProvider;
 
 import org.junit.jupiter.api.Test;
 
@@ -15,6 +16,7 @@ import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -43,6 +45,8 @@ class GpxImportServiceTest {
         assertEquals(4326, tour.getRouteGeometry().getSRID());
         assertEquals("ride.gpx", tour.getGpxTrack().getOriginalFilename());
         assertEquals("generated.gpx", tour.getGpxTrack().getSourceReference());
+        assertNull(tour.getGpxTrack().getSourceProvider());
+        assertNull(tour.getGpxTrack().getSourceActivityId());
     }
 
     @Test
@@ -152,6 +156,38 @@ class GpxImportServiceTest {
         assertEquals(0, repository.persistCount);
     }
 
+    @Test
+    void failedPersistenceRemovesNewlyStoredSourceWhenStorageSupportsCleanup() {
+        RecordingStorage storage = new RecordingStorage("source.gpx");
+        TourRepository repository = new CapturingRepository() {
+            @Override
+            public void persistAndFlush(Tour tour) {
+                throw new IllegalStateException("database failed");
+            }
+        };
+        GpxImportService service = new GpxImportService(repository, storage);
+
+        assertThrows(IllegalStateException.class,
+                () -> service.importGpx(validRequest(null), Path.of("upload.tmp"), "ride.gpx"));
+        assertEquals(1, storage.deleteCount);
+        assertEquals("source.gpx", storage.deletedReference);
+    }
+
+    @Test
+    void garminIdentityIsValidatedBeforeStorage() {
+        CapturingRepository repository = new CapturingRepository();
+        RecordingStorage storage = new RecordingStorage("source.gpx");
+        GpxImportService service = new GpxImportService(repository, storage);
+        GpxImportMetadataRequest request = new GpxImportMetadataRequest(
+                new BigDecimal("35.60"), 1650, 1600, 923, 2677, null,
+                validProfile(), validGeometry(), "GARMIN_CONNECT", "00123"
+        );
+
+        assertThrows(InvalidGpxImportException.class,
+                () -> service.importGpx(request, Path.of("upload.tmp"), "ride.gpx"));
+        assertEquals(0, storage.callCount);
+    }
+
     private static GpxImportMetadataRequest validRequest(LocalDate date) {
         return new GpxImportMetadataRequest(
                 new BigDecimal("35.60"), 1650, 1600, 923, 2677, date,
@@ -181,7 +217,7 @@ class GpxImportServiceTest {
         ));
     }
 
-    private static final class CapturingRepository extends TourRepository {
+    private static class CapturingRepository extends TourRepository {
         private Tour persisted;
         private int persistCount;
 
@@ -194,11 +230,29 @@ class GpxImportServiceTest {
             persisted = tour;
             persistCount++;
         }
+
+        @Override
+        public void lockImportSource(
+                ImportSourceProvider sourceProvider,
+                String sourceActivityId
+        ) {
+            // Unit tests do not require a database advisory lock.
+        }
+
+        @Override
+        public Optional<Tour> findByImportSource(
+                ImportSourceProvider sourceProvider,
+                String sourceActivityId
+        ) {
+            return Optional.empty();
+        }
     }
 
     private static final class RecordingStorage implements GpxSourceStorage {
         private final String sourceReference;
         private int callCount;
+        private int deleteCount;
+        private String deletedReference;
 
         private RecordingStorage(String sourceReference) {
             this.sourceReference = sourceReference;
@@ -208,6 +262,12 @@ class GpxImportServiceTest {
         public String store(Path uploadedFile) {
             callCount++;
             return sourceReference;
+        }
+
+        @Override
+        public void delete(String sourceReference) {
+            deleteCount++;
+            deletedReference = sourceReference;
         }
     }
 }

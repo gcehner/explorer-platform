@@ -15,17 +15,20 @@ import java.sql.Statement;
 public final class TestDatabaseConfigurationGuard implements QuarkusTestBeforeEachCallback {
 
     private static final String EXPECTED_DATABASE = "explorer_test";
+    private static final int EXPECTED_PORT = 5433;
 
     @Override
     public void beforeEach(QuarkusTestMethodContext context) {
         String jdbcUrl = ConfigProvider.getConfig()
                 .getValue("quarkus.datasource.jdbc.url", String.class);
 
-        String database = URI.create(jdbcUrl.substring("jdbc:".length())).getPath();
-        if (!("/" + EXPECTED_DATABASE).equals(database)) {
+        URI datasourceUri = URI.create(jdbcUrl.substring("jdbc:".length()));
+        String database = datasourceUri.getPath();
+        if (!("/" + EXPECTED_DATABASE).equals(database) || datasourceUri.getPort() != EXPECTED_PORT) {
             throw new IllegalStateException(
                     "Refusing to run @QuarkusTest against JDBC URL '" + jdbcUrl
-                            + "'; expected database '" + EXPECTED_DATABASE + "'."
+                            + "'; expected database '" + EXPECTED_DATABASE
+                            + "' on port " + EXPECTED_PORT + "."
             );
         }
 

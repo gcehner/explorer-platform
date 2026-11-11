@@ -16,6 +16,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.Optional;
 
 public final class ExplorerBackendClient {
 
@@ -39,9 +40,20 @@ public final class ExplorerBackendClient {
             Path gpxFile,
             NormalizedGpxData normalizedData
     ) {
+        return importGpx(backendUrl, gpxFile, normalizedData, null, null).response();
+    }
+
+    public GpxImportOutcome importGpx(
+            URI backendUrl,
+            Path gpxFile,
+            NormalizedGpxData normalizedData,
+            String sourceProvider,
+            String sourceActivityId
+    ) {
         try {
             String boundary = "explorer-" + UUID.randomUUID();
-            byte[] metadata = objectMapper.writeValueAsBytes(toMetadata(normalizedData));
+            byte[] metadata = objectMapper.writeValueAsBytes(
+                    toMetadata(normalizedData, sourceProvider, sourceActivityId));
             HttpRequest request = HttpRequest.newBuilder(importUri(backendUrl))
                     .timeout(REQUEST_TIMEOUT)
                     .header("Content-Type", "multipart/form-data; boundary=" + boundary)
@@ -50,14 +62,14 @@ public final class ExplorerBackendClient {
             HttpResponse<String> response = httpClient.send(
                     request,
                     HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-            if (response.statusCode() != 201) {
+            if (response.statusCode() != 201 && response.statusCode() != 200) {
                 throw new BackendClientException(errorMessage(response));
             }
             GpxImportResponse result = objectMapper.readValue(response.body(), GpxImportResponse.class);
             if (result.tourId() <= 0 || result.status() == null || result.status().isBlank()) {
                 throw new BackendClientException("Backend returned an invalid import response.");
             }
-            return result;
+            return new GpxImportOutcome(result, response.statusCode() == 201);
         } catch (BackendClientException exception) {
             throw exception;
         } catch (InterruptedException exception) {
@@ -70,7 +82,47 @@ public final class ExplorerBackendClient {
         }
     }
 
-    private GpxImportMetadata toMetadata(NormalizedGpxData data) {
+    public Optional<GpxImportResponse> findImportBySource(
+            URI backendUrl,
+            String sourceProvider,
+            String sourceActivityId
+    ) {
+        try {
+            URI uri = sourceLookupUri(backendUrl, sourceProvider, sourceActivityId);
+            HttpRequest request = HttpRequest.newBuilder(uri)
+                    .timeout(Duration.ofSeconds(30))
+                    .GET()
+                    .build();
+            HttpResponse<String> response = httpClient.send(
+                    request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            if (response.statusCode() == 404) {
+                return Optional.empty();
+            }
+            if (response.statusCode() != 200) {
+                throw new BackendClientException(
+                        "Explorer backend source lookup failed with HTTP "
+                                + response.statusCode() + ".");
+            }
+            GpxImportResponse result = objectMapper.readValue(response.body(), GpxImportResponse.class);
+            validateResponse(result);
+            return Optional.of(result);
+        } catch (BackendClientException exception) {
+            throw exception;
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new BackendClientException("Explorer source lookup was interrupted.", exception);
+        } catch (IOException | IllegalArgumentException exception) {
+            throw new BackendClientException(
+                    "Could not query import identity through the Explorer backend: "
+                            + exception.getMessage(), exception);
+        }
+    }
+
+    private GpxImportMetadata toMetadata(
+            NormalizedGpxData data,
+            String sourceProvider,
+            String sourceActivityId
+    ) {
         List<GpxImportMetadata.ElevationProfileSample> profile = data.elevationProfile().stream()
                 .map(sample -> new GpxImportMetadata.ElevationProfileSample(
                         sample.distanceKm(), sample.elevationMeters()))
@@ -83,13 +135,33 @@ public final class ExplorerBackendClient {
                 data.highestPointMeters(),
                 data.tourDate(),
                 profile,
-                new GpxImportMetadata.GeoJsonLineString("LineString", data.routeCoordinates()));
+                new GpxImportMetadata.GeoJsonLineString("LineString", data.routeCoordinates()),
+                sourceProvider,
+                sourceActivityId);
     }
 
     private static URI importUri(URI backendUrl) {
         String base = backendUrl.toString();
         return URI.create((base.endsWith("/") ? base.substring(0, base.length() - 1) : base)
                 + IMPORT_PATH);
+    }
+
+    private static URI sourceLookupUri(
+            URI backendUrl,
+            String sourceProvider,
+            String sourceActivityId
+    ) {
+        if (!sourceProvider.matches("[A-Z_]+") || !sourceActivityId.matches("[1-9][0-9]*")) {
+            throw new IllegalArgumentException("Import source identity is invalid.");
+        }
+        return URI.create(importUri(backendUrl) + "/sources/" + sourceProvider
+                + "/" + sourceActivityId);
+    }
+
+    private static void validateResponse(GpxImportResponse result) {
+        if (result.tourId() <= 0 || result.status() == null || result.status().isBlank()) {
+            throw new BackendClientException("Backend returned an invalid import response.");
+        }
     }
 
     private static HttpRequest.BodyPublisher multipartBody(

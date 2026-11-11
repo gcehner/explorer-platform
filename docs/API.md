@@ -1,5 +1,19 @@
 # Public API
 
+Management GPX imports accept optional `sourceProvider` and `sourceActivityId` metadata. Both values
+must be present together. Garmin imports use `GARMIN_CONNECT` and a canonical positive decimal
+activity ID. A new import returns HTTP 201; an already imported source returns HTTP 200 with the
+existing `{ "tourId": ..., "status": ... }` response without changing that tour.
+
+The CLI can perform a pre-download duplicate check with:
+
+```text
+GET /api/management/imports/gpx/sources/GARMIN_CONNECT/{activityId}
+```
+
+The endpoint returns HTTP 200 with the existing import response or HTTP 404 when the source identity
+has not been imported. Database uniqueness remains authoritative for concurrent requests.
+
 ## MTB tour discovery
 
 ### List latest published tours

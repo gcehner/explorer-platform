@@ -12,8 +12,23 @@ public record GpxImportMetadata(
         int highestPointMeters,
         LocalDate tourDate,
         List<ElevationProfileSample> elevationProfile,
-        GeoJsonLineString routeGeometry
+        GeoJsonLineString routeGeometry,
+        String sourceProvider,
+        String sourceActivityId
 ) {
+    public GpxImportMetadata(
+            BigDecimal distanceKm,
+            int totalAscentMeters,
+            int totalDescentMeters,
+            int lowestPointMeters,
+            int highestPointMeters,
+            LocalDate tourDate,
+            List<ElevationProfileSample> elevationProfile,
+            GeoJsonLineString routeGeometry
+    ) {
+        this(distanceKm, totalAscentMeters, totalDescentMeters, lowestPointMeters,
+                highestPointMeters, tourDate, elevationProfile, routeGeometry, null, null);
+    }
     public record ElevationProfileSample(BigDecimal distanceKm, int elevationMeters) {
     }
 

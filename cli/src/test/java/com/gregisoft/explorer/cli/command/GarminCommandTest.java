@@ -5,13 +5,23 @@ import com.gregisoft.explorer.cli.garmin.CredentialStore;
 import com.gregisoft.explorer.cli.garmin.GarminAccessToken;
 import com.gregisoft.explorer.cli.garmin.GarminAuthenticationException;
 import com.gregisoft.explorer.cli.garmin.GarminAuthenticator;
+import com.gregisoft.explorer.cli.garmin.GarminActivityArchive;
+import com.gregisoft.explorer.cli.garmin.GarminFitFixtures;
+import com.gregisoft.explorer.cli.garmin.FitToGpxConverter;
 import com.gregisoft.explorer.cli.garmin.SecretReaderException;
+import com.gregisoft.explorer.cli.http.ExplorerBackendClient;
+import com.sun.net.httpserver.HttpServer;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import picocli.CommandLine;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.Instant;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Optional;
 
@@ -22,10 +32,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GarminCommandTest {
 
+    @TempDir
+    Path tempDirectory;
+
+    private HttpServer server;
+
     private static final String API_KEY = "garmin-secret-key";
     private static final String ACCESS_TOKEN = "garmin-secret-token";
     private static final GarminAuthenticator SUCCESSFUL_AUTHENTICATOR = key ->
             new GarminAccessToken(ACCESS_TOKEN, Instant.parse("2026-11-10T10:00:00Z"));
+
+    @AfterEach
+    void stopServer() {
+        if (server != null) {
+            server.stop(0);
+        }
+    }
 
     @Test
     void commandHierarchyAndHelpAreRegistered() {
@@ -38,6 +60,7 @@ class GarminCommandTest {
         assertTrue(garminHelp.out().contains("configure"));
         assertTrue(garminHelp.out().contains("status"));
         assertTrue(garminHelp.out().contains("logout"));
+        assertTrue(garminHelp.out().contains("import"));
     }
 
     @Test
@@ -109,6 +132,87 @@ class GarminCommandTest {
         assertTrue(second.out().contains("No locally stored"));
         assertNoSecrets(first);
         assertNoSecrets(second);
+    }
+
+    @Test
+    void garminImportCreatesDraftThroughExistingBackendWorkflow() throws Exception {
+        byte[] fit = GarminFitFixtures.activity(tempDirectory, true, 1);
+        byte[] archiveBytes = GarminFitFixtures.zip("activity.fit", fit);
+        server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/api/management/imports/gpx", exchange -> {
+            if ("GET".equals(exchange.getRequestMethod())) {
+                exchange.sendResponseHeaders(404, -1);
+                exchange.close();
+                return;
+            }
+            String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+            assertTrue(body.contains("\"sourceProvider\":\"GARMIN_CONNECT\""));
+            assertTrue(body.contains("\"sourceActivityId\":\"123456789\""));
+            byte[] response = "{\"tourId\":91,\"status\":\"DRAFT\"}"
+                    .getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            exchange.sendResponseHeaders(201, response.length);
+            exchange.getResponseBody().write(response);
+            exchange.close();
+        });
+        server.start();
+        ExplorerBackendClient backendClient = new ExplorerBackendClient();
+        GarminImportCommand command = new GarminImportCommand(
+                new FakeCredentialStore(API_KEY),
+                SUCCESSFUL_AUTHENTICATOR,
+                (token, activityId) -> archiveBytes,
+                backendClient,
+                new GarminActivityArchive(),
+                new FitToGpxConverter(),
+                null
+        );
+
+        Execution execution = execute(
+                command,
+                "https://connect.garmin.com/modern/activity/123456789",
+                "--backend-url",
+                "http://127.0.0.1:" + server.getAddress().getPort()
+        );
+
+        assertEquals(0, execution.exitCode());
+        assertTrue(execution.out().contains("Created tour 91 with status DRAFT"));
+        assertNoSecrets(execution);
+    }
+
+    @Test
+    void duplicateGarminImportStopsBeforeDownload() throws Exception {
+        server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/api/management/imports/gpx", exchange -> {
+            byte[] response = "{\"tourId\":45,\"status\":\"DRAFT\"}"
+                    .getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            exchange.sendResponseHeaders(200, response.length);
+            exchange.getResponseBody().write(response);
+            exchange.close();
+        });
+        server.start();
+        boolean[] downloaded = {false};
+        ExplorerBackendClient backendClient = new ExplorerBackendClient();
+        GarminImportCommand command = new GarminImportCommand(
+                new FakeCredentialStore(API_KEY),
+                SUCCESSFUL_AUTHENTICATOR,
+                (token, activityId) -> {
+                    downloaded[0] = true;
+                    return new byte[0];
+                },
+                backendClient,
+                new GarminActivityArchive(),
+                new FitToGpxConverter(),
+                null
+        );
+
+        Execution execution = execute(command, "123456789", "--backend-url",
+                "http://127.0.0.1:" + server.getAddress().getPort());
+
+        assertEquals(0, execution.exitCode());
+        assertTrue(execution.out().contains("already imported as Explorer tour 45"));
+        assertFalse(downloaded[0]);
+        assertNoSecrets(execution);
     }
 
     private static void assertNoSecrets(Execution execution) {

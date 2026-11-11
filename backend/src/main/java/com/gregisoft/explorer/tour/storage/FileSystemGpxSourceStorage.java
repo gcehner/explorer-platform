@@ -33,4 +33,22 @@ public class FileSystemGpxSourceStorage implements GpxSourceStorage {
             throw new GpxSourceStorageException("Could not store the original GPX file.", exception);
         }
     }
+
+    @Override
+    public void delete(String sourceReference) {
+        if (sourceReference == null || sourceReference.isBlank()) {
+            return;
+        }
+        Path target = storageRoot.resolve(sourceReference).normalize();
+        if (!target.getParent().equals(storageRoot)) {
+            throw new GpxSourceStorageException(
+                    "Refusing to remove a GPX source outside the storage root.", null);
+        }
+        try {
+            Files.deleteIfExists(target);
+        } catch (IOException exception) {
+            throw new GpxSourceStorageException(
+                    "Could not remove a GPX source after a failed import.", exception);
+        }
+    }
 }

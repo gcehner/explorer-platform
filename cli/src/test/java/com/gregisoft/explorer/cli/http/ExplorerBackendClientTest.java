@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class ExplorerBackendClientTest {
 
@@ -117,6 +118,43 @@ class ExplorerBackendClientTest {
                         URI.create("http://127.0.0.1:1"), file, normalized()));
 
         assertTrue(exception.getMessage().startsWith("Could not import GPX through the Explorer backend:"));
+    }
+
+    @Test
+    void sendsSourceIdentityAndRecognizesConcurrentDuplicateResponse() throws Exception {
+        Path file = Files.writeString(tempDirectory.resolve("garmin.gpx"), "<gpx/>");
+        AtomicReference<String> requestBody = new AtomicReference<>();
+        startServer(exchange -> {
+            requestBody.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
+            respond(exchange, 200, "{\"tourId\":77,\"status\":\"DRAFT\"}");
+        });
+
+        GpxImportOutcome outcome = new ExplorerBackendClient().importGpx(
+                baseUri(), file, normalized(), "GARMIN_CONNECT", "123456789");
+
+        assertFalse(outcome.created());
+        assertEquals(77, outcome.response().tourId());
+        assertTrue(requestBody.get().contains("\"sourceProvider\":\"GARMIN_CONNECT\""));
+        assertTrue(requestBody.get().contains("\"sourceActivityId\":\"123456789\""));
+    }
+
+    @Test
+    void sourceLookupReturnsExistingOrEmpty() throws Exception {
+        startServer(exchange -> {
+            assertEquals("GET", exchange.getRequestMethod());
+            assertEquals("/api/management/imports/gpx/sources/GARMIN_CONNECT/123456789",
+                    exchange.getRequestURI().getPath());
+            respond(exchange, 200, "{\"tourId\":88,\"status\":\"DRAFT\"}");
+        });
+        ExplorerBackendClient client = new ExplorerBackendClient();
+        assertEquals(88, client.findImportBySource(
+                baseUri(), "GARMIN_CONNECT", "123456789").orElseThrow().tourId());
+
+        stopServer();
+        server = null;
+        startServer(exchange -> respond(exchange, 404, ""));
+        assertTrue(client.findImportBySource(
+                baseUri(), "GARMIN_CONNECT", "123456789").isEmpty());
     }
 
     private void startServer(ExchangeHandler handler) throws IOException {

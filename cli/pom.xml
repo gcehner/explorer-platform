@@ -19,6 +19,7 @@
         <maven.surefire.version>3.5.6</maven.surefire.version>
         <picocli.version>4.7.7</picocli.version>
         <jna.version>5.19.1</jna.version>
+        <garmin.fit.version>21.218.0</garmin.fit.version>
     </properties>
 
     <dependencies>
@@ -36,6 +37,11 @@
             <groupId>io.jenetics</groupId>
             <artifactId>jpx</artifactId>
             <version>3.2.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.garmin</groupId>
+            <artifactId>fit</artifactId>
+            <version>${garmin.fit.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

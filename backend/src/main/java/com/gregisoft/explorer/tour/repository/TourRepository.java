@@ -1,6 +1,7 @@
 package com.gregisoft.explorer.tour.repository;
 
 import com.gregisoft.explorer.tour.entity.Tour;
+import com.gregisoft.explorer.tour.type.ImportSourceProvider;
 import com.gregisoft.explorer.tour.type.PublicationStatus;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -37,5 +38,30 @@ public class TourRepository {
                 .setParameter("status", PublicationStatus.PUBLISHED)
                 .getResultStream()
                 .findFirst();
+    }
+
+    public Optional<Tour> findByImportSource(
+            ImportSourceProvider sourceProvider,
+            String sourceActivityId
+    ) {
+        return entityManager.createQuery(
+                        "select track.tour from GpxTrack track "
+                                + "where track.sourceProvider = :sourceProvider "
+                                + "and track.sourceActivityId = :sourceActivityId",
+                        Tour.class
+                )
+                .setParameter("sourceProvider", sourceProvider)
+                .setParameter("sourceActivityId", sourceActivityId)
+                .getResultStream()
+                .findFirst();
+    }
+
+    public void lockImportSource(ImportSourceProvider sourceProvider, String sourceActivityId) {
+        String lockIdentity = sourceProvider.name() + ":" + sourceActivityId;
+        entityManager.createNativeQuery(
+                        "select pg_advisory_xact_lock(hashtextextended(cast(:identity as text), 0))"
+                )
+                .setParameter("identity", lockIdentity)
+                .getSingleResult();
     }
 }

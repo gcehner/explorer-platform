@@ -8,6 +8,7 @@ import com.gregisoft.explorer.tour.entity.GpxTrack;
 import com.gregisoft.explorer.tour.entity.Tour;
 import com.gregisoft.explorer.tour.repository.TourRepository;
 import com.gregisoft.explorer.tour.storage.GpxSourceStorage;
+import com.gregisoft.explorer.tour.type.ImportSourceProvider;
 import com.gregisoft.explorer.tour.value.ElevationProfileSample;
 import com.gregisoft.explorer.tour.value.TourStatistics;
 
@@ -24,6 +25,9 @@ import java.math.RoundingMode;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.regex.Pattern;
 
 @ApplicationScoped
 public class GpxImportService {
@@ -31,6 +35,7 @@ public class GpxImportService {
     private static final int WGS_84_SRID = 4326;
     private static final GeometryFactory GEOMETRY_FACTORY =
             new GeometryFactory(new PrecisionModel(), WGS_84_SRID);
+    private static final Pattern GARMIN_ACTIVITY_ID = Pattern.compile("[1-9][0-9]*");
 
     private final TourRepository repository;
     private final GpxSourceStorage storage;
@@ -41,13 +46,28 @@ public class GpxImportService {
     }
 
     @Transactional
-    public GpxImportResponse importGpx(
+    public GpxImportResult importGpx(
             GpxImportMetadataRequest request,
             Path uploadedFile,
             String originalFilename
     ) {
         requireRequest(request);
         requireOriginalFilename(originalFilename);
+        ImportSourceIdentity sourceIdentity = parseSourceIdentity(request);
+
+        if (sourceIdentity != null) {
+            repository.lockImportSource(sourceIdentity.provider(), sourceIdentity.activityId());
+            Optional<Tour> existing = repository.findByImportSource(
+                    sourceIdentity.provider(), sourceIdentity.activityId());
+            if (existing.isPresent()) {
+                Tour existingTour = existing.get();
+                return new GpxImportResult(
+                        new GpxImportResponse(
+                                existingTour.getId(), existingTour.getPublicationStatus()),
+                        false
+                );
+            }
+        }
 
         TourStatistics statistics = createStatistics(request);
         List<ElevationProfileSample> elevationProfile = createElevationProfile(request);
@@ -66,10 +86,32 @@ public class GpxImportService {
         }
 
         String sourceReference = storage.store(uploadedFile);
-        tour.attachGpxTrack(new GpxTrack(originalFilename, sourceReference));
+        tour.attachGpxTrack(new GpxTrack(
+                originalFilename,
+                sourceReference,
+                sourceIdentity == null ? null : sourceIdentity.provider(),
+                sourceIdentity == null ? null : sourceIdentity.activityId()
+        ));
 
-        repository.persistAndFlush(tour);
-        return new GpxImportResponse(tour.getId(), tour.getPublicationStatus());
+        try {
+            repository.persistAndFlush(tour);
+        } catch (RuntimeException exception) {
+            try {
+                storage.delete(sourceReference);
+            } catch (RuntimeException cleanupFailure) {
+                exception.addSuppressed(cleanupFailure);
+            }
+            throw exception;
+        }
+        return new GpxImportResult(
+                new GpxImportResponse(tour.getId(), tour.getPublicationStatus()), true);
+    }
+
+    @Transactional
+    public Optional<GpxImportResponse> findBySource(String provider, String activityId) {
+        ImportSourceIdentity sourceIdentity = parseRequiredSourceIdentity(provider, activityId);
+        return repository.findByImportSource(sourceIdentity.provider(), sourceIdentity.activityId())
+                .map(tour -> new GpxImportResponse(tour.getId(), tour.getPublicationStatus()));
     }
 
     private static void requireRequest(GpxImportMetadataRequest request) {
@@ -94,6 +136,49 @@ public class GpxImportService {
         if (originalFilename.trim().length() > 255) {
             throw new InvalidGpxImportException("The original GPX filename must not exceed 255 characters.");
         }
+    }
+
+    private static ImportSourceIdentity parseSourceIdentity(GpxImportMetadataRequest request) {
+        if (request.sourceProvider() == null && request.sourceActivityId() == null) {
+            return null;
+        }
+        if (request.sourceProvider() == null || request.sourceActivityId() == null) {
+            throw new InvalidGpxImportException(
+                    "Import source provider and activity ID must either both be present or both be absent."
+            );
+        }
+        return parseRequiredSourceIdentity(request.sourceProvider(), request.sourceActivityId());
+    }
+
+    private static ImportSourceIdentity parseRequiredSourceIdentity(
+            String provider,
+            String activityId
+    ) {
+        ImportSourceProvider parsedProvider;
+        try {
+            parsedProvider = ImportSourceProvider.valueOf(requireText(provider, "Source provider")
+                    .toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException exception) {
+            throw new InvalidGpxImportException("Unsupported import source provider.", exception);
+        }
+        String normalizedActivityId = requireText(activityId, "Source activity ID");
+        if (parsedProvider == ImportSourceProvider.GARMIN_CONNECT
+                && !GARMIN_ACTIVITY_ID.matcher(normalizedActivityId).matches()) {
+            throw new InvalidGpxImportException(
+                    "Garmin activity ID must be a canonical positive decimal string."
+            );
+        }
+        if (normalizedActivityId.length() > 255) {
+            throw new InvalidGpxImportException("Source activity ID must not exceed 255 characters.");
+        }
+        return new ImportSourceIdentity(parsedProvider, normalizedActivityId);
+    }
+
+    private static String requireText(String value, String fieldName) {
+        if (value == null || value.isBlank()) {
+            throw new InvalidGpxImportException(fieldName + " must not be blank.");
+        }
+        return value.trim();
     }
 
     private static TourStatistics createStatistics(GpxImportMetadataRequest request) {
@@ -183,5 +268,11 @@ public class GpxImportService {
         }
 
         return GEOMETRY_FACTORY.createLineString(coordinates);
+    }
+
+    private record ImportSourceIdentity(
+            ImportSourceProvider provider,
+            String activityId
+    ) {
     }
 }

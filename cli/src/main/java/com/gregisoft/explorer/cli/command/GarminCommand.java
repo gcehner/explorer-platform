@@ -10,7 +10,8 @@ import picocli.CommandLine.Command;
         subcommands = {
                 GarminConfigureCommand.class,
                 GarminStatusCommand.class,
-                GarminLogoutCommand.class
+                GarminLogoutCommand.class,
+                GarminImportCommand.class
         }
 )
 public class GarminCommand implements Runnable {

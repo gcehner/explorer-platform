@@ -44,6 +44,10 @@ Enum surface_type {
   DOUBLETRACK
 }
 
+Enum import_source_provider {
+  GARMIN_CONNECT
+}
+
 Table tour {
   id bigint [pk, increment]
   title varchar(200)
@@ -91,6 +95,12 @@ Table gpx_track {
   tour_id bigint [not null, unique]
   original_filename varchar(255) [not null, note: 'Must not be blank.']
   source_reference varchar(1000) [not null, note: 'Opaque storage reference; must not be blank.']
+  source_provider import_source_provider [note: 'Optional external import provider. Must be present together with source_activity_id.']
+  source_activity_id varchar(255) [note: 'Canonical provider activity ID. Must be present together with source_provider.']
+
+  indexes {
+    (source_provider, source_activity_id) [unique, name: 'uq_gpx_track_source_identity']
+  }
 }
 
 Table tour_photo {

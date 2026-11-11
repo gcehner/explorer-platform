@@ -129,6 +129,12 @@ Garmin Personal API key configuration and authentication are described in
 [`GARMIN_CLI.md`](GARMIN_CLI.md). Garmin credentials remain local to the CLI and are never sent to
 the Explorer backend.
 
+Garmin activities are downloaded as bounded ZIP archives, decoded from FIT in the CLI and converted
+to a temporary GPX. The generated GPX then follows the same normalization and backend import path as
+a manual GPX import. `gpx_track` stores the optional `(source_provider, source_activity_id)` pair;
+the database unique constraint and transactional source lock make provider imports idempotent while
+leaving manual imports unchanged.
+
 ---
 
 ## Storage

@@ -13,6 +13,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
+import io.restassured.response.Response;
 
 import static com.gregisoft.explorer.test.TestDatabaseSafety.assertUsingIsolatedTestDatabase;
 import static io.restassured.RestAssured.given;
@@ -20,6 +28,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @QuarkusTest
 class GpxImportResourceTest {
@@ -124,6 +133,97 @@ class GpxImportResourceTest {
                 .multiPart("gpxFile", "original.gpx", "content".getBytes(), "application/gpx+xml")
                 .when().post("/api/management/imports/gpx")
                 .then().statusCode(422);
+    }
+
+    @Test
+    void garminImportPersistsSourceIdentityAndDuplicateReturnsExistingTour() {
+        Response created = postImport(garminMetadata("123456789"), "garmin.gpx");
+        assertEquals(201, created.statusCode());
+        long tourId = created.jsonPath().getLong("tourId");
+
+        given()
+                .when().get("/api/management/imports/gpx/sources/GARMIN_CONNECT/123456789")
+                .then()
+                .statusCode(200)
+                .body("tourId", equalTo((int) tourId))
+                .body("status", equalTo("DRAFT"));
+
+        Response duplicate = postImport(garminMetadata("123456789"), "duplicate.gpx");
+        assertEquals(200, duplicate.statusCode());
+        assertEquals(tourId, duplicate.jsonPath().getLong("tourId"));
+
+        Object[] counts = (Object[]) entityManager.createNativeQuery(
+                "select (select count(*) from tour), (select count(*) from gpx_track)"
+        ).getSingleResult();
+        assertEquals(1L, ((Number) counts[0]).longValue());
+        assertEquals(1L, ((Number) counts[1]).longValue());
+
+        Object[] source = (Object[]) entityManager.createNativeQuery(
+                "select source_provider, source_activity_id from gpx_track where tour_id = :id"
+        ).setParameter("id", tourId).getSingleResult();
+        assertEquals("GARMIN_CONNECT", source[0]);
+        assertEquals("123456789", source[1]);
+    }
+
+    @Test
+    void concurrentGarminImportsCreateExactlyOneTour() throws Exception {
+        String metadata = garminMetadata("987654321");
+        CountDownLatch ready = new CountDownLatch(2);
+        CountDownLatch start = new CountDownLatch(1);
+        Callable<Response> request = () -> {
+            ready.countDown();
+            start.await();
+            return postImport(metadata, "concurrent.gpx");
+        };
+
+        try (ExecutorService executor = Executors.newFixedThreadPool(2)) {
+            Future<Response> first = executor.submit(request);
+            Future<Response> second = executor.submit(request);
+            ready.await();
+            start.countDown();
+
+            Response firstResponse = first.get();
+            Response secondResponse = second.get();
+            assertTrue(List.of(200, 201).contains(firstResponse.statusCode()));
+            assertTrue(List.of(200, 201).contains(secondResponse.statusCode()));
+            assertNotEquals(firstResponse.statusCode(), secondResponse.statusCode());
+            assertEquals(firstResponse.jsonPath().getLong("tourId"),
+                    secondResponse.jsonPath().getLong("tourId"));
+        }
+
+        Number tourCount = (Number) entityManager.createNativeQuery(
+                "select count(*) from tour").getSingleResult();
+        Number trackCount = (Number) entityManager.createNativeQuery(
+                "select count(*) from gpx_track").getSingleResult();
+        assertEquals(1L, tourCount.longValue());
+        assertEquals(1L, trackCount.longValue());
+        try (Stream<Path> paths = Files.list(STORAGE_ROOT)) {
+            assertEquals(1L, paths.count());
+        }
+    }
+
+    @Test
+    void invalidSourceIdentityIsRejectedBeforeImport() {
+        postImport(garminMetadata("00123"), "invalid.gpx")
+                .then()
+                .statusCode(422);
+    }
+
+    private static Response postImport(String metadata, String filename) {
+        return given()
+                .multiPart("metadata", "metadata.json", metadata, "application/json")
+                .multiPart("gpxFile", filename, "<gpx>untouched</gpx>".getBytes(),
+                        "application/gpx+xml")
+                .when()
+                .post("/api/management/imports/gpx");
+    }
+
+    private static String garminMetadata(String activityId) {
+        return validMetadata().replace(
+                "\n}",
+                ",\n  \"sourceProvider\": \"GARMIN_CONNECT\",\n"
+                        + "  \"sourceActivityId\": \"" + activityId + "\"\n}"
+        );
     }
 
     private static String validMetadata() {
